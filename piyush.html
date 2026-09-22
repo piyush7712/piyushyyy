@@ -1,0 +1,556 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Sagar Institutional Hub</title>
+
+    <link rel="stylesheet" href="yy.css">
+</head>
+
+<body>
+
+<!-- ================= LOGIN ================= -->
+
+<div id="authScreen" class="auth-screen">
+
+    <div class="auth-card">
+
+        <div class="logo-box">
+            <div class="logo">S</div>
+            <div>
+                <h1>Sagar Hub</h1>
+                <p>Institutional Knowledge System</p>
+            </div>
+        </div>
+
+        <!-- LOGIN -->
+
+        <div id="loginBox">
+
+            <h2>Welcome Back</h2>
+            <p class="subtitle">Login to your institutional dashboard</p>
+
+            <form id="loginForm">
+
+                <label>Email</label>
+                <input
+                    type="email"
+                    id="loginEmail"
+                    placeholder="Enter email"
+                    required
+                >
+
+                <label>Password</label>
+                <input
+                    type="password"
+                    id="loginPassword"
+                    placeholder="Enter password"
+                    required
+                >
+
+                <button type="submit" class="primary-btn">
+                    Login
+                </button>
+
+            </form>
+
+            <p id="loginMessage" class="message"></p>
+
+            <p class="switch-text">
+                Don't have an account?
+                <button id="showSignup" class="link-btn">
+                    Create Account
+                </button>
+            </p>
+
+        </div>
+
+
+        <!-- SIGNUP -->
+
+        <div id="signupBox" class="hidden">
+
+            <h2>Create Account</h2>
+            <p class="subtitle">Create your Sagar Hub account</p>
+
+            <form id="signupForm">
+
+                <label>Name</label>
+                <input
+                    type="text"
+                    id="signupName"
+                    placeholder="Your name"
+                    required
+                >
+
+                <label>Email</label>
+                <input
+                    type="email"
+                    id="signupEmail"
+                    placeholder="Enter email"
+                    required
+                >
+
+                <label>Password</label>
+                <input
+                    type="password"
+                    id="signupPassword"
+                    placeholder="Minimum 6 characters"
+                    required
+                >
+
+                <button type="submit" class="primary-btn">
+                    Create Account
+                </button>
+
+            </form>
+
+            <p id="signupMessage" class="message"></p>
+
+            <p class="switch-text">
+                Already have an account?
+                <button id="showLogin" class="link-btn">
+                    Login
+                </button>
+            </p>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+<!-- ================= APP ================= -->
+
+<div id="app" class="app hidden">
+
+    <!-- SIDEBAR -->
+
+    <aside class="sidebar">
+
+        <div class="brand">
+            <div class="brand-logo">S</div>
+
+            <div>
+                <h2>Sagar Hub</h2>
+                <span>DT-17</span>
+            </div>
+        </div>
+
+
+        <nav>
+
+            <button class="nav-btn active" data-page="dashboard">
+                <span>▦</span>
+                Dashboard
+            </button>
+
+            <button class="nav-btn" data-page="meetings">
+                <span>📅</span>
+                Meetings
+            </button>
+
+            <button class="nav-btn" data-page="events">
+                <span>🎤</span>
+                Events
+            </button>
+
+            <button class="nav-btn" data-page="policies">
+                <span>📚</span>
+                Policies
+            </button>
+
+        </nav>
+
+
+        <div class="sidebar-bottom">
+
+            <button id="logoutBtn" class="logout-btn">
+                Logout
+            </button>
+
+        </div>
+
+    </aside>
+
+
+    <!-- MAIN -->
+
+    <main class="main">
+
+        <!-- TOPBAR -->
+
+        <header class="topbar">
+
+            <div>
+                <h1 id="pageTitle">Dashboard</h1>
+                <p id="userEmail">Loading...</p>
+            </div>
+
+            <div class="user-avatar" id="userAvatar">
+                U
+            </div>
+
+        </header>
+
+
+        <!-- ================= DASHBOARD ================= -->
+
+        <section id="dashboardPage" class="page">
+
+            <div class="hero">
+
+                <div>
+                    <span class="hero-tag">SAGAR INSTITUTIONAL HUB</span>
+
+                    <h2>
+                        Digital Memory of the Institution
+                    </h2>
+
+                    <p>
+                        Manage meetings, events, policies and
+                        institutional records from one place.
+                    </p>
+                </div>
+
+            </div>
+
+
+            <div class="stats-grid">
+
+                <div class="stat-card">
+                    <span>Meetings</span>
+                    <strong id="meetingCount">0</strong>
+                </div>
+
+                <div class="stat-card">
+                    <span>Events</span>
+                    <strong id="eventCount">0</strong>
+                </div>
+
+                <div class="stat-card">
+                    <span>Policies</span>
+                    <strong id="policyCount">0</strong>
+                </div>
+
+            </div>
+
+
+            <div class="content-card">
+
+                <div class="section-header">
+
+                    <div>
+                        <h2>Recent Meetings</h2>
+                        <p>Latest institutional records</p>
+                    </div>
+
+                    <button class="small-btn" id="dashboardMeetingBtn">
+                        + Add Meeting
+                    </button>
+
+                </div>
+
+                <div id="recentMeetings" class="record-list">
+                    <p class="empty">No meetings yet.</p>
+                </div>
+
+            </div>
+
+        </section>
+
+
+        <!-- ================= MEETINGS ================= -->
+
+        <section id="meetingsPage" class="page hidden">
+
+            <div class="page-header">
+
+                <div>
+                    <h2>Meetings</h2>
+                    <p>Manage institutional meetings and minutes.</p>
+                </div>
+
+                <button id="addMeetingBtn" class="primary-btn small">
+                    + Add Meeting
+                </button>
+
+            </div>
+
+
+            <div id="meetingList" class="cards-grid">
+
+                <p class="empty">No meetings found.</p>
+
+            </div>
+
+        </section>
+
+
+        <!-- ================= EVENTS ================= -->
+
+        <section id="eventsPage" class="page hidden">
+
+            <div class="page-header">
+
+                <div>
+                    <h2>Events</h2>
+                    <p>Digitally archive institutional events.</p>
+                </div>
+
+                <button id="addEventBtn" class="primary-btn small">
+                    + Add Event
+                </button>
+
+            </div>
+
+
+            <div id="eventList" class="cards-grid">
+
+                <p class="empty">No events found.</p>
+
+            </div>
+
+        </section>
+
+
+        <!-- ================= POLICIES ================= -->
+
+        <section id="policiesPage" class="page hidden">
+
+            <div class="page-header">
+
+                <div>
+                    <h2>Policies & Rules</h2>
+                    <p>Central repository for institutional policies.</p>
+                </div>
+
+                <button id="addPolicyBtn" class="primary-btn small">
+                    + Add Policy
+                </button>
+
+            </div>
+
+
+            <div id="policyList" class="cards-grid">
+
+                <p class="empty">No policies found.</p>
+
+            </div>
+
+        </section>
+
+    </main>
+
+</div>
+
+
+<!-- ================= MEETING MODAL ================= -->
+
+<div id="meetingModal" class="modal hidden">
+
+    <div class="modal-card">
+
+        <div class="modal-header">
+
+            <h2>Add Meeting</h2>
+
+            <button class="close-btn" data-close="meetingModal">
+                ×
+            </button>
+
+        </div>
+
+
+        <form id="meetingForm">
+
+            <label>Meeting Title</label>
+            <input
+                id="meetingTitle"
+                type="text"
+                placeholder="Example: Academic Committee Meeting"
+                required
+            >
+
+            <label>Date</label>
+            <input
+                id="meetingDate"
+                type="date"
+                required
+            >
+
+            <label>Venue</label>
+            <input
+                id="meetingVenue"
+                type="text"
+                placeholder="Conference Room"
+                required
+            >
+
+            <label>Agenda</label>
+            <textarea
+                id="meetingAgenda"
+                placeholder="Meeting agenda..."
+                required
+            ></textarea>
+
+            <label>Minutes / Decisions</label>
+            <textarea
+                id="meetingMinutes"
+                placeholder="Meeting minutes and decisions..."
+            ></textarea>
+
+            <button class="primary-btn" type="submit">
+                Save Meeting
+            </button>
+
+        </form>
+
+    </div>
+
+</div>
+
+
+<!-- ================= EVENT MODAL ================= -->
+
+<div id="eventModal" class="modal hidden">
+
+    <div class="modal-card">
+
+        <div class="modal-header">
+
+            <h2>Add Event</h2>
+
+            <button class="close-btn" data-close="eventModal">
+                ×
+            </button>
+
+        </div>
+
+
+        <form id="eventForm">
+
+            <label>Event Name</label>
+
+            <input
+                id="eventTitle"
+                type="text"
+                placeholder="Example: Annual Function"
+                required
+            >
+
+            <label>Date</label>
+
+            <input
+                id="eventDate"
+                type="date"
+                required
+            >
+
+            <label>Location</label>
+
+            <input
+                id="eventLocation"
+                type="text"
+                placeholder="Main Auditorium"
+                required
+            >
+
+            <label>Description</label>
+
+            <textarea
+                id="eventDescription"
+                placeholder="Event details..."
+            ></textarea>
+
+            <button class="primary-btn" type="submit">
+                Save Event
+            </button>
+
+        </form>
+
+    </div>
+
+</div>
+
+
+<!-- ================= POLICY MODAL ================= -->
+
+<div id="policyModal" class="modal hidden">
+
+    <div class="modal-card">
+
+        <div class="modal-header">
+
+            <h2>Add Policy</h2>
+
+            <button class="close-btn" data-close="policyModal">
+                ×
+            </button>
+
+        </div>
+
+
+        <form id="policyForm">
+
+            <label>Policy Name</label>
+
+            <input
+                id="policyTitle"
+                type="text"
+                placeholder="Example: Attendance Policy"
+                required
+            >
+
+            <label>Version</label>
+
+            <input
+                id="policyVersion"
+                type="text"
+                placeholder="1.0"
+                required
+            >
+
+            <label>Effective Date</label>
+
+            <input
+                id="policyDate"
+                type="date"
+                required
+            >
+
+            <label>Policy Details</label>
+
+            <textarea
+                id="policyDescription"
+                placeholder="Policy details..."
+                required
+            ></textarea>
+
+            <button class="primary-btn" type="submit">
+                Save Policy
+            </button>
+
+        </form>
+
+    </div>
+
+</div>
+
+
+<!-- ================= TOAST ================= -->
+
+<div id="toast" class="toast">
+    Saved successfully
+</div>
+
+
+<!-- IMPORTANT: JavaScript module -->
+
+<script type="module" src="j.js"></script>
+
+</body>
+</html>
