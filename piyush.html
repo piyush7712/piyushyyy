@@ -1,556 +1,800 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-    <title>Sagar Institutional Hub</title>
-
-    <link rel="stylesheet" href="yy.css">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#07111f">
+<meta name="description" content="Sagar Institutional Hub - centralized institutional memory system">
+<title>Sagar Institutional Hub</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="yy.css">
 </head>
-
 <body>
+<!-- ========================================================= -->
+<!-- AUTH SCREEN                                                -->
+<!-- ========================================================= -->
+<section id="authScreen" class="auth-screen">
+<div class="auth-background-grid"></div>
+<div class="auth-orbit auth-orbit-one"></div>
+<div class="auth-orbit auth-orbit-two"></div>
+<div class="auth-card">
+<div class="auth-showcase">
+<div class="showcase-top">
+<div class="brand-mark">
+<span class="brand-mark-main">S</span>
+<span class="brand-mark-dot"></span>
+</div>
+<div class="brand-mini">
+<strong>SAGAR</strong>
+<span>INSTITUTIONAL HUB</span>
+</div>
+</div>
+<div class="showcase-content">
+<p class="eyebrow">INSTITUTIONAL MEMORY SYSTEM</p>
+<h1>Keep every important decision connected.</h1>
+<p class="showcase-description">
+A centralized digital space for meetings, events, policy records,
+institutional actions and long-term knowledge retention.
+</p>
+<div class="showcase-points">
+<div class="showcase-point">
+<span class="point-icon">01</span>
+<div>
+<strong>Centralized Records</strong>
+<small>Bring scattered institutional information into one place.</small>
+</div>
+</div>
+<div class="showcase-point">
+<span class="point-icon">02</span>
+<div>
+<strong>Knowledge Retention</strong>
+<small>Preserve meetings, events, decisions and policies.</small>
+</div>
+</div>
+<div class="showcase-point">
+<span class="point-icon">03</span>
+<div>
+<strong>Accountable Actions</strong>
+<small>Track decisions, owners, deadlines and status.</small>
+</div>
+</div>
+</div>
+</div>
+<div class="showcase-footer">
+<span>Designed for institutional continuity</span>
+<span class="footer-pulse"></span>
+<span>Secure access</span>
+</div>
+</div>
+<div class="auth-form-panel">
+<div class="auth-form-top">
+<div class="mobile-brand">
+<div class="brand-mark">
+<span class="brand-mark-main">S</span>
+<span class="brand-mark-dot"></span>
+</div>
+<div class="brand-mini">
+<strong>SAGAR</strong>
+<span>INSTITUTIONAL HUB</span>
+</div>
+</div>
+<span class="security-chip">
+<span class="security-dot"></span>
+Protected workspace
+</span>
+</div>
+<div id="loginBox" class="auth-box">
+<div class="auth-heading">
+<span class="auth-kicker">WELCOME BACK</span>
+<h2>Sign in to the Hub</h2>
+<p>Access institutional records and knowledge.</p>
+</div>
+<form id="loginForm" autocomplete="on">
+<label class="input-group">
+<span>Email address</span>
+<div class="input-wrapper">
+<span class="input-icon">@</span>
+<input id="loginEmail" type="email" placeholder="you@example.com" required>
+</div>
+</label>
+<label class="input-group">
+<span>Password</span>
+<div class="input-wrapper">
+<span class="input-icon">••</span>
+<input id="loginPassword" type="password" placeholder="Enter your password" required>
+</div>
+</label>
+<button type="submit" class="primary-btn auth-submit">
+<span>Sign in</span>
+<span class="btn-arrow">→</span>
+</button>
+<p id="loginMessage" class="form-message"></p>
+</form>
+<div class="auth-switch">
+<span>New to the Hub?</span>
+<button id="showSignup" type="button" class="text-btn">Create account</button>
+</div>
+</div>
+<div id="signupBox" class="auth-box hidden">
+<div class="auth-heading">
+<span class="auth-kicker">GET STARTED</span>
+<h2>Create your account</h2>
+<p>Join the institutional knowledge workspace.</p>
+</div>
+<form id="signupForm" autocomplete="on">
+<label class="input-group">
+<span>Full name</span>
+<div class="input-wrapper">
+<span class="input-icon">N</span>
+<input id="signupName" type="text" placeholder="Your full name" required>
+</div>
+</label>
+<label class="input-group">
+<span>Email address</span>
+<div class="input-wrapper">
+<span class="input-icon">@</span>
+<input id="signupEmail" type="email" placeholder="you@example.com" required>
+</div>
+</label>
+<label class="input-group">
+<span>Password</span>
+<div class="input-wrapper">
+<span class="input-icon">••</span>
+<input id="signupPassword" type="password" placeholder="Minimum 6 characters" required>
+</div>
+</label>
+<button type="submit" class="primary-btn auth-submit">
+<span>Create account</span>
+<span class="btn-arrow">→</span>
+</button>
+<p id="signupMessage" class="form-message"></p>
+</form>
+<div class="auth-switch">
+<span>Already have an account?</span>
+<button id="showLogin" type="button" class="text-btn">Sign in</button>
+</div>
+</div>
+</div>
+</div>
+</section>
 
-<!-- ================= LOGIN ================= -->
+<!-- ========================================================= -->
+<!-- APPLICATION SHELL                                         -->
+<!-- ========================================================= -->
+<div id="app" class="app-shell hidden">
+<aside class="sidebar">
+<div class="sidebar-glow"></div>
+<div class="sidebar-brand">
+<div class="brand-mark">
+<span class="brand-mark-main">S</span>
+<span class="brand-mark-dot"></span>
+</div>
+<div class="brand-text">
+<strong>SAGAR</strong>
+<span>INSTITUTIONAL HUB</span>
+</div>
+</div>
+<div class="brand-status">
+<span class="status-live-dot"></span>
+<span>Knowledge system online</span>
+</div>
+<div class="nav-section">
+<span class="nav-section-title">WORKSPACE</span>
+<nav class="navigation">
+<button class="nav-btn active" data-page="dashboard" type="button">
+<span class="nav-icon">⌂</span>
+<span class="nav-label">Dashboard</span>
+<span class="nav-indicator"></span>
+</button>
+<button class="nav-btn" data-page="meetings" type="button">
+<span class="nav-icon">▣</span>
+<span class="nav-label">Meetings</span>
+<span class="nav-indicator"></span>
+</button>
+<button class="nav-btn" data-page="events" type="button">
+<span class="nav-icon">◇</span>
+<span class="nav-label">Events &amp; Archive</span>
+<span class="nav-indicator"></span>
+</button>
+<button class="nav-btn" data-page="policies" type="button">
+<span class="nav-icon">▤</span>
+<span class="nav-label">Policies &amp; Rules</span>
+<span class="nav-indicator"></span>
+</button>
+</nav>
+</div>
+<div class="sidebar-feature">
+<div class="feature-orb"></div>
+<span class="feature-label">INSTITUTIONAL MEMORY</span>
+<strong>One place for decisions, records and continuity.</strong>
+<span class="feature-line"></span>
+<small>Designed for transparent handovers and faster retrieval.</small>
+</div>
+<div class="sidebar-bottom">
+<div class="system-card">
+<div class="system-card-top">
+<span>DATABASE</span>
+<span class="system-online">LIVE</span>
+</div>
+<div class="system-bar"><span></span></div>
+<small>Realtime records connected</small>
+</div>
+<button id="logoutBtn" class="logout-btn" type="button">
+<span class="logout-icon">↪</span>
+<span>Sign out</span>
+</button>
+</div>
+</aside>
+<main class="main-content">
+<header class="topbar">
+<div class="topbar-left">
+<button class="mobile-menu" type="button" aria-label="Open navigation">☰</button>
+<div class="breadcrumb">
+<span>Institution</span>
+<span>/</span>
+<strong id="pageTitle">Dashboard</strong>
+</div>
+</div>
+<div class="topbar-right">
+<div class="connection-status">
+<span class="connection-dot"></span>
+<span>Realtime</span>
+</div>
+<span class="topbar-divider"></span>
+<div class="user-info">
+<div id="userAvatar" class="user-avatar">S</div>
+<div class="user-details">
+<strong id="userEmail">user@example.com</strong>
+<span id="userRole">Member</span>
+</div>
+</div>
+</div>
+</header>
+<div class="page-container">
 
-<div id="authScreen" class="auth-screen">
+<!-- ========================================================= -->
+<!-- DASHBOARD                                                 -->
+<!-- ========================================================= -->
+<section id="dashboardPage" class="page active-page">
+<div class="hero">
+<div class="hero-grid"></div>
+<div class="hero-glow"></div>
+<div class="hero-content">
+<div class="hero-copy">
+<span class="hero-kicker">SAGAR INSTITUTIONAL HUB</span>
+<h1>Institutional memory, <span>organized.</span></h1>
+<p>
+Manage meetings, preserve events, maintain policy versions
+and keep important institutional knowledge accessible.
+</p>
+<div class="hero-actions">
+<button id="dashboardMeetingBtn" class="primary-btn" type="button">
+<span>Record a meeting</span>
+<span>+</span>
+</button>
+<div class="hero-note">
+<span class="note-check">✓</span>
+<span>Records update in real time</span>
+</div>
+</div>
+</div>
+<div class="hero-visual">
+<div class="memory-stack">
+<div class="memory-card memory-card-back"></div>
+<div class="memory-card memory-card-mid"></div>
+<div class="memory-card memory-card-main">
+<div class="memory-card-header">
+<div class="memory-icon">S</div>
+<div>
+<span>INSTITUTIONAL MEMORY</span>
+<strong>Knowledge Core</strong>
+</div>
+<span class="memory-live">LIVE</span>
+</div>
+<div class="memory-flow">
+<div class="flow-node">
+<span>01</span>
+<strong>Meetings</strong>
+<small>Decisions</small>
+</div>
+<span class="flow-arrow">→</span>
+<div class="flow-node">
+<span>02</span>
+<strong>Events</strong>
+<small>Archives</small>
+</div>
+<span class="flow-arrow">→</span>
+<div class="flow-node">
+<span>03</span>
+<strong>Policies</strong>
+<small>Versions</small>
+</div>
+</div>
+<div class="memory-footer">
+<span>Centralized repository</span>
+<span>● Synced</span>
+</div>
+</div>
+</div>
+<div class="floating-record floating-record-one">
+<span class="record-mini-icon">✓</span>
+<div>
+<small>ACTION ITEM</small>
+<strong>Owner assigned</strong>
+</div>
+</div>
+<div class="floating-record floating-record-two">
+<span class="record-mini-icon">V</span>
+<div>
+<small>POLICY</small>
+<strong>Version controlled</strong>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="section-header dashboard-section-header">
+<div>
+<span class="section-kicker">AT A GLANCE</span>
+<h2>Institutional overview</h2>
+<p>Track the knowledge stored in your workspace.</p>
+</div>
+</div>
+<div class="stats-grid">
+<article class="stat-card stat-purple">
+<div class="stat-card-top">
+<div class="stat-icon">▣</div>
+<span class="stat-label">MEETINGS</span>
+</div>
+<strong id="meetingCount" class="stat-value">0</strong>
+<div class="stat-bottom">
+<span>Recorded discussions</span>
+<span class="stat-arrow">↗</span>
+</div>
+</article>
+<article class="stat-card stat-cyan">
+<div class="stat-card-top">
+<div class="stat-icon">◇</div>
+<span class="stat-label">EVENTS</span>
+</div>
+<strong id="eventCount" class="stat-value">0</strong>
+<div class="stat-bottom">
+<span>Archived activities</span>
+<span class="stat-arrow">↗</span>
+</div>
+</article>
+<article class="stat-card stat-green">
+<div class="stat-card-top">
+<div class="stat-icon">▤</div>
+<span class="stat-label">POLICIES</span>
+</div>
+<strong id="policyCount" class="stat-value">0</strong>
+<div class="stat-bottom">
+<span>Controlled documents</span>
+<span class="stat-arrow">↗</span>
+</div>
+</article>
+<article class="stat-card stat-orange">
+<div class="stat-card-top">
+<div class="stat-icon">✓</div>
+<span class="stat-label">ACTIONS</span>
+</div>
+<strong id="actionCount" class="stat-value">0</strong>
+<div class="stat-bottom">
+<span>Tracked commitments</span>
+<span class="stat-arrow">↗</span>
+</div>
+</article>
+</div>
+<div class="dashboard-lower">
+<article class="content-card recent-card">
+<div class="card-header">
+<div>
+<span class="section-kicker">LATEST RECORDS</span>
+<h3>Recent meetings</h3>
+</div>
+<span class="live-pill"><span></span> Live</span>
+</div>
+<div id="recentMeetings" class="recent-list">
+<div class="empty-state">
+<div class="empty-icon">▣</div>
+<strong>No meetings yet</strong>
+<span>Create the first meeting record to build your institutional memory.</span>
+</div>
+</div>
+</article>
+<article class="content-card knowledge-card">
+<div class="card-header">
+<div>
+<span class="section-kicker">HOW IT WORKS</span>
+<h3>Knowledge flow</h3>
+</div>
+</div>
+<div class="knowledge-flow">
+<div class="knowledge-step">
+<span class="knowledge-number">01</span>
+<div>
+<strong>Capture</strong>
+<span>Record meetings, events and policies.</span>
+</div>
+</div>
+<div class="knowledge-line"></div>
+<div class="knowledge-step">
+<span class="knowledge-number">02</span>
+<div>
+<strong>Organize</strong>
+<span>Keep records structured and searchable.</span>
+</div>
+</div>
+<div class="knowledge-line"></div>
+<div class="knowledge-step">
+<span class="knowledge-number">03</span>
+<div>
+<strong>Reuse</strong>
+<span>Retrieve institutional knowledge when needed.</span>
+</div>
+</div>
+</div>
+</article>
+</div>
+</section>
 
-    <div class="auth-card">
+<!-- ========================================================= -->
+<!-- MEETINGS                                                  -->
+<!-- ========================================================= -->
+<section id="meetingsPage" class="page">
+<div class="page-toolbar">
+<div>
+<span class="page-eyebrow">RECORD &amp; TRACK</span>
+<h1>Meetings</h1>
+<p>Store agendas, minutes, decisions and action items in one place.</p>
+</div>
+<button id="addMeetingBtn" class="primary-btn toolbar-action" type="button">
+<span>+ New meeting</span>
+</button>
+</div>
+<div class="record-overview">
+<div class="mini-overview">
+<span class="mini-icon">▣</span>
+<div>
+<small>MEETING REPOSITORY</small>
+<strong>Decisions that remain accessible</strong>
+</div>
+</div>
+<div class="archive-status">
+<span></span>
+Realtime archive active
+</div>
+</div>
+<div id="meetingList" class="records-grid">
+<div class="empty-state large-empty">
+<div class="empty-icon">▣</div>
+<strong>No meeting records</strong>
+<span>Add a meeting to start building a searchable history of institutional decisions.</span>
+<button id="emptyMeetingBtn" class="secondary-btn empty-action" type="button">Create meeting</button>
+</div>
+</div>
+</section>
 
-        <div class="logo-box">
-            <div class="logo">S</div>
-            <div>
-                <h1>Sagar Hub</h1>
-                <p>Institutional Knowledge System</p>
-            </div>
-        </div>
+<!-- ========================================================= -->
+<!-- EVENTS                                                    -->
+<!-- ========================================================= -->
+<section id="eventsPage" class="page">
+<div class="page-toolbar">
+<div>
+<span class="page-eyebrow">EVENT MEMORY</span>
+<h1>Events &amp; Archive</h1>
+<p>Preserve institutional events, speakers, presentations and important resources.</p>
+</div>
+<button id="addEventBtn" class="primary-btn toolbar-action" type="button">
+<span>+ Add event</span>
+</button>
+</div>
+<div class="event-intro-banner">
+<div class="banner-icon">◇</div>
+<div>
+<span>INSTITUTIONAL ARCHIVE</span>
+<strong>Keep important event knowledge beyond the event day.</strong>
+<p>
+Store descriptions, speakers and useful links so future teams
+can discover what happened and why it mattered.
+</p>
+</div>
+<div class="banner-decoration"></div>
+</div>
+<div id="eventList" class="records-grid">
+<div class="empty-state large-empty">
+<div class="empty-icon">◇</div>
+<strong>No archived events</strong>
+<span>Add events, conferences or institutional activities to preserve their history.</span>
+<button id="emptyEventBtn" class="secondary-btn empty-action" type="button">Create event</button>
+</div>
+</div>
+</section>
 
-        <!-- LOGIN -->
+<!-- ========================================================= -->
+<!-- POLICIES                                                  -->
+<!-- ========================================================= -->
+<section id="policiesPage" class="page">
+<div class="page-toolbar">
+<div>
+<span class="page-eyebrow">CONTROLLED KNOWLEDGE</span>
+<h1>Policies &amp; Rules</h1>
+<p>Maintain policy descriptions, effective dates and versions in a structured repository.</p>
+</div>
+<button id="addPolicyBtn" class="primary-btn toolbar-action" type="button">
+<span>+ Add policy</span>
+</button>
+</div>
+<div class="policy-version-banner">
+<div class="version-symbol">V</div>
+<div>
+<span>VERSION CONTROL</span>
+<strong>Make the current institutional rule easy to identify.</strong>
+<p>Use clear version labels and dates to support compliance, handovers and future reference.</p>
+</div>
+<div class="version-stack">
+<span>v3</span>
+<span>v2</span>
+<span>v1</span>
+</div>
+</div>
+<div id="policyList" class="records-grid">
+<div class="empty-state large-empty">
+<div class="empty-icon">▤</div>
+<strong>No policy records</strong>
+<span>Add institutional policies, rules or guidelines to create a reliable reference library.</span>
+<button id="emptyPolicyBtn" class="secondary-btn empty-action" type="button">Create policy</button>
+</div>
+</div>
+</section>
 
-        <div id="loginBox">
+</div>
+</main>
+</div>
 
-            <h2>Welcome Back</h2>
-            <p class="subtitle">Login to your institutional dashboard</p>
+<!-- ========================================================= -->
+<!-- MEETING MODAL                                             -->
+<!-- ========================================================= -->
+<div id="meetingModal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="meetingModalTitle">
+<div class="modal-backdrop" data-close="meetingModal"></div>
+<div class="modal-box">
+<div class="modal-header">
+<div>
+<span class="modal-kicker">INSTITUTIONAL RECORD</span>
+<h2 id="meetingModalTitle">Add meeting</h2>
+<p>Capture the discussion and commitments for future reference.</p>
+</div>
+<button class="modal-close" type="button" data-close="meetingModal" aria-label="Close">×</button>
+</div>
+<form id="meetingForm">
+<div class="form-section">
+<div class="form-section-title">
+<span>01</span>
+<div>
+<strong>Meeting details</strong>
+<small>Basic information about the meeting.</small>
+</div>
+</div>
+<div class="form-grid">
+<label class="input-group">
+<span>Meeting title</span>
+<input id="meetingTitle" type="text" placeholder="e.g. Academic Council Meeting" required>
+</label>
+<label class="input-group">
+<span>Date</span>
+<input id="meetingDate" type="date" required>
+</label>
+<label class="input-group">
+<span>Venue</span>
+<input id="meetingVenue" type="text" placeholder="Board room / Online / Campus">
+</label>
+<label class="input-group full-width">
+<span>Agenda</span>
+<textarea id="meetingAgenda" rows="4" placeholder="Topics discussed, objectives and agenda points"></textarea>
+</label>
+<label class="input-group full-width">
+<span>Minutes</span>
+<textarea id="meetingMinutes" rows="5" placeholder="Important discussion, decisions and conclusions"></textarea>
+</label>
+</div>
+</div>
+<div class="form-section">
+<div class="form-section-title">
+<span>02</span>
+<div>
+<strong>Action item</strong>
+<small>Track a responsibility created during the meeting.</small>
+</div>
+</div>
+<div class="form-grid">
+<label class="input-group full-width">
+<span>Action / decision</span>
+<textarea id="meetingAction" rows="3" placeholder="What needs to be done?"></textarea>
+</label>
+<label class="input-group">
+<span>Action owner</span>
+<input id="actionOwner" type="text" placeholder="Responsible person / department">
+</label>
+<label class="input-group">
+<span>Due date</span>
+<input id="actionDue" type="date">
+</label>
+<label class="input-group">
+<span>Status</span>
+<select id="meetingStatus">
+<option value="Pending">Pending</option>
+<option value="In Progress">In Progress</option>
+<option value="Completed">Completed</option>
+</select>
+</label>
+</div>
+</div>
+<div class="modal-footer">
+<button class="secondary-btn" type="button" data-close="meetingModal">Cancel</button>
+<button class="primary-btn" type="submit">Save meeting</button>
+</div>
+</form>
+</div>
+</div>
 
-            <form id="loginForm">
+<!-- ========================================================= -->
+<!-- EVENT MODAL                                               -->
+<!-- ========================================================= -->
+<div id="eventModal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="eventModalTitle">
+<div class="modal-backdrop" data-close="eventModal"></div>
+<div class="modal-box">
+<div class="modal-header">
+<div>
+<span class="modal-kicker">EVENT ARCHIVE</span>
+<h2 id="eventModalTitle">Add event</h2>
+<p>Preserve the context and resources connected to an institutional event.</p>
+</div>
+<button class="modal-close" type="button" data-close="eventModal" aria-label="Close">×</button>
+</div>
+<form id="eventForm">
+<div class="form-section">
+<div class="form-section-title">
+<span>01</span>
+<div>
+<strong>Event information</strong>
+<small>Describe the institutional activity.</small>
+</div>
+</div>
+<div class="form-grid">
+<label class="input-group">
+<span>Event title</span>
+<input id="eventTitle" type="text" placeholder="e.g. Annual Innovation Summit" required>
+</label>
+<label class="input-group">
+<span>Date</span>
+<input id="eventDate" type="date" required>
+</label>
+<label class="input-group">
+<span>Location</span>
+<input id="eventLocation" type="text" placeholder="Campus / Auditorium / Online">
+</label>
+<label class="input-group">
+<span>Speaker / Guest</span>
+<input id="eventSpeaker" type="text" placeholder="Speaker, guest or organizing unit">
+</label>
+<label class="input-group full-width">
+<span>Description</span>
+<textarea id="eventDescription" rows="6" placeholder="What happened, why was it important and what should future teams know?"></textarea>
+</label>
+<label class="input-group full-width">
+<span>Archive / presentation link</span>
+<input id="eventLink" type="url" placeholder="https://example.com/resource">
+</label>
+</div>
+</div>
+<div class="modal-footer">
+<button class="secondary-btn" type="button" data-close="eventModal">Cancel</button>
+<button class="primary-btn" type="submit">Save event</button>
+</div>
+</form>
+</div>
+</div>
 
-                <label>Email</label>
-                <input
-                    type="email"
-                    id="loginEmail"
-                    placeholder="Enter email"
-                    required
-                >
+<!-- ========================================================= -->
+<!-- POLICY MODAL                                              -->
+<!-- ========================================================= -->
+<div id="policyModal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="policyModalTitle">
+<div class="modal-backdrop" data-close="policyModal"></div>
+<div class="modal-box">
+<div class="modal-header">
+<div>
+<span class="modal-kicker">POLICY REPOSITORY</span>
+<h2 id="policyModalTitle">Add policy</h2>
+<p>Store a clear, searchable version of an institutional rule or policy.</p>
+</div>
+<button class="modal-close" type="button" data-close="policyModal" aria-label="Close">×</button>
+</div>
+<form id="policyForm">
+<div class="form-section">
+<div class="form-section-title">
+<span>01</span>
+<div>
+<strong>Policy information</strong>
+<small>Identify the rule and its current version.</small>
+</div>
+</div>
+<div class="form-grid">
+<label class="input-group">
+<span>Policy title</span>
+<input id="policyTitle" type="text" placeholder="e.g. Examination Attendance Policy" required>
+</label>
+<label class="input-group">
+<span>Version</span>
+<input id="policyVersion" type="text" placeholder="e.g. 1.0 / 2.1" required>
+</label>
+<label class="input-group">
+<span>Effective / updated date</span>
+<input id="policyDate" type="date" required>
+</label>
+<label class="input-group full-width">
+<span>Description</span>
+<textarea id="policyDescription" rows="8" placeholder="Policy scope, rules, responsibilities, exceptions and important notes"></textarea>
+</label>
+</div>
+</div>
+<div class="modal-footer">
+<button class="secondary-btn" type="button" data-close="policyModal">Cancel</button>
+<button class="primary-btn" type="submit">Save policy</button>
+</div>
+</form>
+</div>
+</div>
 
-                <label>Password</label>
-                <input
-                    type="password"
-                    id="loginPassword"
-                    placeholder="Enter password"
-                    required
-                >
-
-                <button type="submit" class="primary-btn">
-                    Login
-                </button>
-
-            </form>
-
-            <p id="loginMessage" class="message"></p>
-
-            <p class="switch-text">
-                Don't have an account?
-                <button id="showSignup" class="link-btn">
-                    Create Account
-                </button>
-            </p>
-
-        </div>
-
-
-        <!-- SIGNUP -->
-
-        <div id="signupBox" class="hidden">
-
-            <h2>Create Account</h2>
-            <p class="subtitle">Create your Sagar Hub account</p>
-
-            <form id="signupForm">
-
-                <label>Name</label>
-                <input
-                    type="text"
-                    id="signupName"
-                    placeholder="Your name"
-                    required
-                >
-
-                <label>Email</label>
-                <input
-                    type="email"
-                    id="signupEmail"
-                    placeholder="Enter email"
-                    required
-                >
-
-                <label>Password</label>
-                <input
-                    type="password"
-                    id="signupPassword"
-                    placeholder="Minimum 6 characters"
-                    required
-                >
-
-                <button type="submit" class="primary-btn">
-                    Create Account
-                </button>
-
-            </form>
-
-            <p id="signupMessage" class="message"></p>
-
-            <p class="switch-text">
-                Already have an account?
-                <button id="showLogin" class="link-btn">
-                    Login
-                </button>
-            </p>
-
-        </div>
-
-    </div>
-
+<!-- ========================================================= -->
+<!-- GLOBAL TOAST                                              -->
+<!-- ========================================================= -->
+<div id="toast" class="toast" role="status" aria-live="polite">
+<div class="toast-icon">✓</div>
+<div class="toast-content">
+<strong>Updated</strong>
+<span>Record saved successfully.</span>
+</div>
+<button class="toast-close" type="button" aria-label="Close notification">×</button>
 </div>
 
 
-<!-- ================= APP ================= -->
-
-<div id="app" class="app hidden">
-
-    <!-- SIDEBAR -->
-
-    <aside class="sidebar">
-
-        <div class="brand">
-            <div class="brand-logo">S</div>
-
-            <div>
-                <h2>Sagar Hub</h2>
-                <span>DT-17</span>
-            </div>
-        </div>
-
-
-        <nav>
-
-            <button class="nav-btn active" data-page="dashboard">
-                <span>▦</span>
-                Dashboard
-            </button>
-
-            <button class="nav-btn" data-page="meetings">
-                <span>📅</span>
-                Meetings
-            </button>
-
-            <button class="nav-btn" data-page="events">
-                <span>🎤</span>
-                Events
-            </button>
-
-            <button class="nav-btn" data-page="policies">
-                <span>📚</span>
-                Policies
-            </button>
-
-        </nav>
-
-
-        <div class="sidebar-bottom">
-
-            <button id="logoutBtn" class="logout-btn">
-                Logout
-            </button>
-
-        </div>
-
-    </aside>
-
-
-    <!-- MAIN -->
-
-    <main class="main">
-
-        <!-- TOPBAR -->
-
-        <header class="topbar">
-
-            <div>
-                <h1 id="pageTitle">Dashboard</h1>
-                <p id="userEmail">Loading...</p>
-            </div>
-
-            <div class="user-avatar" id="userAvatar">
-                U
-            </div>
-
-        </header>
-
-
-        <!-- ================= DASHBOARD ================= -->
-
-        <section id="dashboardPage" class="page">
-
-            <div class="hero">
-
-                <div>
-                    <span class="hero-tag">SAGAR INSTITUTIONAL HUB</span>
-
-                    <h2>
-                        Digital Memory of the Institution
-                    </h2>
-
-                    <p>
-                        Manage meetings, events, policies and
-                        institutional records from one place.
-                    </p>
-                </div>
-
-            </div>
-
-
-            <div class="stats-grid">
-
-                <div class="stat-card">
-                    <span>Meetings</span>
-                    <strong id="meetingCount">0</strong>
-                </div>
-
-                <div class="stat-card">
-                    <span>Events</span>
-                    <strong id="eventCount">0</strong>
-                </div>
-
-                <div class="stat-card">
-                    <span>Policies</span>
-                    <strong id="policyCount">0</strong>
-                </div>
-
-            </div>
-
-
-            <div class="content-card">
-
-                <div class="section-header">
-
-                    <div>
-                        <h2>Recent Meetings</h2>
-                        <p>Latest institutional records</p>
-                    </div>
-
-                    <button class="small-btn" id="dashboardMeetingBtn">
-                        + Add Meeting
-                    </button>
-
-                </div>
-
-                <div id="recentMeetings" class="record-list">
-                    <p class="empty">No meetings yet.</p>
-                </div>
-
-            </div>
-
-        </section>
-
-
-        <!-- ================= MEETINGS ================= -->
-
-        <section id="meetingsPage" class="page hidden">
-
-            <div class="page-header">
-
-                <div>
-                    <h2>Meetings</h2>
-                    <p>Manage institutional meetings and minutes.</p>
-                </div>
-
-                <button id="addMeetingBtn" class="primary-btn small">
-                    + Add Meeting
-                </button>
-
-            </div>
-
-
-            <div id="meetingList" class="cards-grid">
-
-                <p class="empty">No meetings found.</p>
-
-            </div>
-
-        </section>
-
-
-        <!-- ================= EVENTS ================= -->
-
-        <section id="eventsPage" class="page hidden">
-
-            <div class="page-header">
-
-                <div>
-                    <h2>Events</h2>
-                    <p>Digitally archive institutional events.</p>
-                </div>
-
-                <button id="addEventBtn" class="primary-btn small">
-                    + Add Event
-                </button>
-
-            </div>
-
-
-            <div id="eventList" class="cards-grid">
-
-                <p class="empty">No events found.</p>
-
-            </div>
-
-        </section>
-
-
-        <!-- ================= POLICIES ================= -->
-
-        <section id="policiesPage" class="page hidden">
-
-            <div class="page-header">
-
-                <div>
-                    <h2>Policies & Rules</h2>
-                    <p>Central repository for institutional policies.</p>
-                </div>
-
-                <button id="addPolicyBtn" class="primary-btn small">
-                    + Add Policy
-                </button>
-
-            </div>
-
-
-            <div id="policyList" class="cards-grid">
-
-                <p class="empty">No policies found.</p>
-
-            </div>
-
-        </section>
-
-    </main>
-
-</div>
-
-
-<!-- ================= MEETING MODAL ================= -->
-
-<div id="meetingModal" class="modal hidden">
-
-    <div class="modal-card">
-
-        <div class="modal-header">
-
-            <h2>Add Meeting</h2>
-
-            <button class="close-btn" data-close="meetingModal">
-                ×
-            </button>
-
-        </div>
-
-
-        <form id="meetingForm">
-
-            <label>Meeting Title</label>
-            <input
-                id="meetingTitle"
-                type="text"
-                placeholder="Example: Academic Committee Meeting"
-                required
-            >
-
-            <label>Date</label>
-            <input
-                id="meetingDate"
-                type="date"
-                required
-            >
-
-            <label>Venue</label>
-            <input
-                id="meetingVenue"
-                type="text"
-                placeholder="Conference Room"
-                required
-            >
-
-            <label>Agenda</label>
-            <textarea
-                id="meetingAgenda"
-                placeholder="Meeting agenda..."
-                required
-            ></textarea>
-
-            <label>Minutes / Decisions</label>
-            <textarea
-                id="meetingMinutes"
-                placeholder="Meeting minutes and decisions..."
-            ></textarea>
-
-            <button class="primary-btn" type="submit">
-                Save Meeting
-            </button>
-
-        </form>
-
-    </div>
-
-</div>
-
-
-<!-- ================= EVENT MODAL ================= -->
-
-<div id="eventModal" class="modal hidden">
-
-    <div class="modal-card">
-
-        <div class="modal-header">
-
-            <h2>Add Event</h2>
-
-            <button class="close-btn" data-close="eventModal">
-                ×
-            </button>
-
-        </div>
-
-
-        <form id="eventForm">
-
-            <label>Event Name</label>
-
-            <input
-                id="eventTitle"
-                type="text"
-                placeholder="Example: Annual Function"
-                required
-            >
-
-            <label>Date</label>
-
-            <input
-                id="eventDate"
-                type="date"
-                required
-            >
-
-            <label>Location</label>
-
-            <input
-                id="eventLocation"
-                type="text"
-                placeholder="Main Auditorium"
-                required
-            >
-
-            <label>Description</label>
-
-            <textarea
-                id="eventDescription"
-                placeholder="Event details..."
-            ></textarea>
-
-            <button class="primary-btn" type="submit">
-                Save Event
-            </button>
-
-        </form>
-
-    </div>
-
-</div>
-
-
-<!-- ================= POLICY MODAL ================= -->
-
-<div id="policyModal" class="modal hidden">
-
-    <div class="modal-card">
-
-        <div class="modal-header">
-
-            <h2>Add Policy</h2>
-
-            <button class="close-btn" data-close="policyModal">
-                ×
-            </button>
-
-        </div>
-
-
-        <form id="policyForm">
-
-            <label>Policy Name</label>
-
-            <input
-                id="policyTitle"
-                type="text"
-                placeholder="Example: Attendance Policy"
-                required
-            >
-
-            <label>Version</label>
-
-            <input
-                id="policyVersion"
-                type="text"
-                placeholder="1.0"
-                required
-            >
-
-            <label>Effective Date</label>
-
-            <input
-                id="policyDate"
-                type="date"
-                required
-            >
-
-            <label>Policy Details</label>
-
-            <textarea
-                id="policyDescription"
-                placeholder="Policy details..."
-                required
-            ></textarea>
-
-            <button class="primary-btn" type="submit">
-                Save Policy
-            </button>
-
-        </form>
-
-    </div>
-
-</div>
-
-
-<!-- ================= TOAST ================= -->
-
-<div id="toast" class="toast">
-    Saved successfully
-</div>
-
-
-<!-- IMPORTANT: JavaScript module -->
-
+<!-- ========================================================= -->
+<!-- DESIGN CUSTOMIZATION MAP - SAFE TO EDIT                 -->
+<!-- ========================================================= -->
+<!--
+  Main visual classes are intentionally exposed for easy editing:
+  auth-screen / auth-card        = login page
+  sidebar / nav-btn              = navigation
+  topbar / user-info             = application header
+  hero / hero-content             = dashboard hero
+  stat-card                       = dashboard counters
+  content-card                    = dashboard information cards
+  records-grid                    = meetings/events/policies layout
+  primary-btn / secondary-btn     = buttons
+  modal / modal-box               = data entry dialogs
+  record-card / meeting-card      = JS-generated record cards
+  event-card / policy-card        = JS-generated archive cards
+  CSS variables in yy.css         = global colors and dimensions
+  Keep all id attributes used by j.js unchanged.
+-->
+<!-- ========================================================= -->
+
+<!-- UI CUSTOMIZATION NOTE 001: Keep j.js IDs unchanged when redesigning this section. -->
+<!-- UI CUSTOMIZATION NOTE 002: Keep j.js IDs unchanged when redesigning this section. -->
+<!-- UI CUSTOMIZATION NOTE 003: Keep j.js IDs unchanged when redesigning this section. -->
+<!-- UI CUSTOMIZATION NOTE 004: Keep j.js IDs unchanged when redesigning this section. -->
+<!-- UI CUSTOMIZATION NOTE 005: Keep j.js IDs unchanged when redesigning this section. -->
+<!-- UI CUSTOMIZATION NOTE 006: Keep j.js IDs unchanged when redesigning this section. -->
+<!-- UI CUSTOMIZATION NOTE 007: Keep j.js IDs unchanged when redesigning this section. -->
+<!-- UI CUSTOMIZATION NOTE 008: Keep j.js IDs unchanged when redesigning this section. -->
+<!-- UI CUSTOMIZATION NOTE 009: Keep j.js IDs unchanged when redesigning this section. -->
+<!-- UI CUSTOMIZATION NOTE 010: Keep j.js IDs unchanged when redesigning this section. -->
+<!-- UI CUSTOMIZATION NOTE 011: Keep j.js IDs unchanged when redesigning this section. -->
+<!-- UI CUSTOMIZATION NOTE 012: Keep j.js IDs unchanged when redesigning this section. -->
+<!-- UI CUSTOMIZATION NOTE 013: Keep j.js IDs unchanged when redesigning this section. -->
 <script type="module" src="j.js"></script>
-
 </body>
 </html>

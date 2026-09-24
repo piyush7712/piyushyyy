@@ -1,5 +1,3 @@
-
-
 import {
     initializeApp
 } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-app.js";
@@ -24,197 +22,221 @@ import {
     serverTimestamp
 } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-firestore.js";
 
-  
-import { getAnalytics } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-analytics.js";
-  
-  const firebaseConfig = {
+
+/* ================= FIREBASE ================= */
+
+const firebaseConfig = {
+
     apiKey: "AIzaSyB31XbqNeoQvpKthFXvHh2kN4WNaeihSlI",
-    authDomain: "sagarhub-ffa62.firebaseapp.com",
-    projectId: "sagarhub-ffa62",
-    storageBucket: "sagarhub-ffa62.firebasestorage.app",
-    messagingSenderId: "217343016577",
-    appId: "1:217343016577:web:65974d97ebc202f8e91780",
-    measurementId: "G-EX0E5LZZF6"
-  };
 
-  
-  const app = initializeApp(firebaseConfig);
-  const analytics = getAnalytics(app);
+    authDomain:
+        "sagarhub-ffa62.firebaseapp.com",
+
+    projectId:
+        "sagarhub-ffa62",
+
+    storageBucket:
+        "sagarhub-ffa62.firebasestorage.app",
+
+    messagingSenderId:
+        "217343016577",
+
+    appId:
+        "1:217343016577:web:65974d97ebc202f8e91780",
+
+    measurementId:
+        "G-EX0E5LZZF6"
+};
 
 
+const app = initializeApp(firebaseConfig);
 
 const auth = getAuth(app);
 
 const db = getFirestore(app);
 
 
-// ======================================================
-// DOM ELEMENTS
-// ======================================================
+/* =================================================
+   IMPORTANT
+   
+   PUT YOUR ADMIN FIREBASE UID HERE
+   ================================================= */
 
-const authScreen = document.getElementById("authScreen");
-
-const appScreen = document.getElementById("app");
-
-const loginBox = document.getElementById("loginBox");
-
-const signupBox = document.getElementById("signupBox");
-
-const loginForm = document.getElementById("loginForm");
-
-const signupForm = document.getElementById("signupForm");
-
-const loginMessage = document.getElementById("loginMessage");
-
-const signupMessage = document.getElementById("signupMessage");
-
-const userEmail = document.getElementById("userEmail");
-
-const userAvatar = document.getElementById("userAvatar");
+const ADMIN_UID =
+    "PASTE_YOUR_ADMIN_UID_HERE";
 
 
-// ======================================================
-// SHOW LOGIN / SIGNUP
-// ======================================================
-
-document.getElementById("showSignup").addEventListener("click", () => {
-
-    loginBox.classList.add("hidden");
-
-    signupBox.classList.remove("hidden");
-
-    loginMessage.textContent = "";
-
-});
+let isAdmin = false;
 
 
-document.getElementById("showLogin").addEventListener("click", () => {
+/* ================= DOM ================= */
 
-    signupBox.classList.add("hidden");
+const authScreen =
+    document.getElementById("authScreen");
 
-    loginBox.classList.remove("hidden");
+const appScreen =
+    document.getElementById("app");
 
-    signupMessage.textContent = "";
+const loginBox =
+    document.getElementById("loginBox");
 
-});
+const signupBox =
+    document.getElementById("signupBox");
+
+const loginForm =
+    document.getElementById("loginForm");
+
+const signupForm =
+    document.getElementById("signupForm");
+
+const loginMessage =
+    document.getElementById("loginMessage");
+
+const signupMessage =
+    document.getElementById("signupMessage");
+
+const userEmail =
+    document.getElementById("userEmail");
+
+const userAvatar =
+    document.getElementById("userAvatar");
+
+const userRole =
+    document.getElementById("userRole");
 
 
-// ======================================================
-// SIGN UP
-// ======================================================
+/* ================= LOGIN / SIGNUP SWITCH ================= */
 
-signupForm.addEventListener("submit", async (event) => {
+document
+    .getElementById("showSignup")
+    .onclick = () => {
 
-    event.preventDefault();
+        loginBox.classList.add("hidden");
 
-    const name =
-        document.getElementById("signupName").value.trim();
+        signupBox.classList.remove("hidden");
 
-    const email =
-        document.getElementById("signupEmail").value.trim();
-
-    const password =
-        document.getElementById("signupPassword").value;
+        loginMessage.textContent = "";
+    };
 
 
-    signupMessage.textContent = "Creating account...";
+document
+    .getElementById("showLogin")
+    .onclick = () => {
+
+        signupBox.classList.add("hidden");
+
+        loginBox.classList.remove("hidden");
+
+        signupMessage.textContent = "";
+    };
 
 
-    try {
+/* ================= SIGNUP ================= */
 
-        const userCredential =
+signupForm.addEventListener(
+    "submit",
+    async e => {
+
+        e.preventDefault();
+
+        const email =
+            document.getElementById(
+                "signupEmail"
+            ).value;
+
+        const password =
+            document.getElementById(
+                "signupPassword"
+            ).value;
+
+        try {
+
             await createUserWithEmailAndPassword(
                 auth,
                 email,
                 password
             );
 
+            signupMessage.textContent =
+                "Account created successfully.";
 
-        // User successfully created
-        console.log("User created:", userCredential.user);
+            signupForm.reset();
 
-        signupMessage.textContent =
-            "Account created successfully!";
+        } catch (error) {
 
+            signupMessage.textContent =
+                getError(error);
 
-        signupForm.reset();
-
-
-    } catch (error) {
-
-        console.error(error);
-
-        signupMessage.textContent =
-            getFirebaseError(error);
-
+        }
     }
-
-});
-
-
-// ======================================================
-// LOGIN
-// ======================================================
-
-loginForm.addEventListener("submit", async (event) => {
-
-    event.preventDefault();
+);
 
 
-    const email =
-        document.getElementById("loginEmail").value.trim();
+/* ================= LOGIN ================= */
 
-    const password =
-        document.getElementById("loginPassword").value;
+loginForm.addEventListener(
+    "submit",
+    async e => {
 
+        e.preventDefault();
 
-    loginMessage.textContent = "Logging in...";
+        const email =
+            document.getElementById(
+                "loginEmail"
+            ).value;
 
+        const password =
+            document.getElementById(
+                "loginPassword"
+            ).value;
 
-    try {
+        try {
 
-        const userCredential =
             await signInWithEmailAndPassword(
                 auth,
                 email,
                 password
             );
 
+            loginMessage.textContent = "";
 
-        console.log(
-            "Logged in:",
-            userCredential.user.email
+        } catch (error) {
+
+            loginMessage.textContent =
+                getError(error);
+
+        }
+    }
+);
+
+
+/* ================= AUTH STATE ================= */
+
+onAuthStateChanged(
+    auth,
+    user => {
+
+        if (!user) {
+
+            authScreen.classList.remove(
+                "hidden"
+            );
+
+            appScreen.classList.add(
+                "hidden"
+            );
+
+            return;
+        }
+
+
+        authScreen.classList.add(
+            "hidden"
         );
 
-
-        loginMessage.textContent = "";
-
-
-    } catch (error) {
-
-        console.error(error);
-
-        loginMessage.textContent =
-            getFirebaseError(error);
-
-    }
-
-});
-
-
-// ======================================================
-// AUTH STATE
-// ======================================================
-
-onAuthStateChanged(auth, (user) => {
-
-    if (user) {
-
-        // USER LOGGED IN
-
-        authScreen.classList.add("hidden");
-
-        appScreen.classList.remove("hidden");
+        appScreen.classList.remove(
+            "hidden"
+        );
 
 
         userEmail.textContent =
@@ -223,8 +245,23 @@ onAuthStateChanged(auth, (user) => {
 
         userAvatar.textContent =
             user.email
-                ? user.email.charAt(0).toUpperCase()
-                : "U";
+                .charAt(0)
+                .toUpperCase();
+
+
+        /* CHECK ADMIN */
+
+        isAdmin =
+            user.uid === ADMIN_UID;
+
+
+        userRole.textContent =
+            isAdmin
+                ? "ADMIN"
+                : "USER";
+
+
+        updateAdminUI();
 
 
         loadMeetings();
@@ -233,124 +270,161 @@ onAuthStateChanged(auth, (user) => {
 
         loadPolicies();
 
-
-    } else {
-
-        // USER LOGGED OUT
-
-        authScreen.classList.remove("hidden");
-
-        appScreen.classList.add("hidden");
-
     }
+);
 
-});
 
-
-// ======================================================
-// LOGOUT
-// ======================================================
+/* ================= LOGOUT ================= */
 
 document
     .getElementById("logoutBtn")
-    .addEventListener("click", async () => {
+    .onclick = () => {
 
-        try {
-
-            await signOut(auth);
-
-        } catch (error) {
-
-            console.error(error);
-
-        }
-
-    });
-
-
-// ======================================================
-// NAVIGATION
-// ======================================================
-
-const navButtons =
-    document.querySelectorAll(".nav-btn");
-
-
-navButtons.forEach((button) => {
-
-    button.addEventListener("click", () => {
-
-        const page =
-            button.dataset.page;
-
-
-        showPage(page);
-
-
-        navButtons.forEach((btn) => {
-
-            btn.classList.remove("active");
-
-        });
-
-
-        button.classList.add("active");
-
-    });
-
-});
-
-
-function showPage(page) {
-
-    document
-        .querySelectorAll(".page")
-        .forEach((section) => {
-
-            section.classList.add("hidden");
-
-        });
-
-
-    const selectedPage =
-        document.getElementById(page + "Page");
-
-
-    if (selectedPage) {
-
-        selectedPage.classList.remove("hidden");
-
-    }
-
-
-    const titles = {
-
-        dashboard: "Dashboard",
-
-        meetings: "Meetings",
-
-        events: "Events",
-
-        policies: "Policies & Rules"
+        signOut(auth);
 
     };
 
 
-    document.getElementById("pageTitle").textContent =
-        titles[page] || "Dashboard";
+/* ================= ADMIN UI ================= */
+
+function updateAdminUI() {
+
+    const buttons = [
+
+        "addMeetingBtn",
+
+        "dashboardMeetingBtn",
+
+        "addEventBtn",
+
+        "addPolicyBtn"
+
+    ];
+
+
+    buttons.forEach(id => {
+
+        const button =
+            document.getElementById(id);
+
+        if (!button) return;
+
+
+        button.style.display =
+            isAdmin
+                ? ""
+                : "none";
+
+    });
 
 }
 
 
-// ======================================================
-// MODALS
-// ======================================================
+/* =================================================
+   SHARED INSTITUTIONAL DATA
+
+   All users read ADMIN records.
+   Only ADMIN can create/delete.
+   ================================================= */
+
+function dataPath(type) {
+
+    return collection(
+        db,
+        "users",
+        ADMIN_UID,
+        type
+    );
+
+}
+
+
+/* ================= NAVIGATION ================= */
+
+document
+    .querySelectorAll(".nav-btn")
+    .forEach(button => {
+
+        button.onclick = () => {
+
+            const page =
+                button.dataset.page;
+
+
+            document
+                .querySelectorAll(".page")
+                .forEach(p => {
+
+                    p.classList.add(
+                        "hidden"
+                    );
+
+                });
+
+
+            document
+                .getElementById(
+                    page + "Page"
+                )
+                .classList.remove(
+                    "hidden"
+                );
+
+
+            document
+                .querySelectorAll(".nav-btn")
+                .forEach(b => {
+
+                    b.classList.remove(
+                        "active"
+                    );
+
+                });
+
+
+            button.classList.add(
+                "active"
+            );
+
+
+            const titles = {
+
+                dashboard:
+                    "Dashboard",
+
+                meetings:
+                    "Meetings",
+
+                events:
+                    "Events",
+
+                policies:
+                    "Policies & Rules"
+
+            };
+
+
+            document
+                .getElementById(
+                    "pageTitle"
+                )
+                .textContent =
+                    titles[page];
+
+        };
+
+    });
+
+
+/* ================= MODALS ================= */
 
 function openModal(id) {
 
     document
         .getElementById(id)
-        .classList.remove("hidden");
+        .classList.remove(
+            "hidden"
+        );
 
 }
 
@@ -359,875 +433,1104 @@ function closeModal(id) {
 
     document
         .getElementById(id)
-        .classList.add("hidden");
+        .classList.add(
+            "hidden"
+        );
 
 }
 
 
 document
     .querySelectorAll("[data-close]")
-    .forEach((button) => {
+    .forEach(button => {
 
-        button.addEventListener("click", () => {
+        button.onclick = () => {
 
             closeModal(
                 button.dataset.close
             );
 
-        });
+        };
 
     });
 
+
+/* OPEN BUTTONS */
 
 document
     .getElementById("addMeetingBtn")
-    .addEventListener("click", () => {
+    .onclick = () => {
 
         openModal("meetingModal");
 
-    });
+    };
 
 
 document
-    .getElementById("dashboardMeetingBtn")
-    .addEventListener("click", () => {
+    .getElementById(
+        "dashboardMeetingBtn"
+    )
+    .onclick = () => {
 
         openModal("meetingModal");
 
-    });
+    };
 
 
 document
     .getElementById("addEventBtn")
-    .addEventListener("click", () => {
+    .onclick = () => {
 
         openModal("eventModal");
 
-    });
+    };
 
 
 document
     .getElementById("addPolicyBtn")
-    .addEventListener("click", () => {
+    .onclick = () => {
 
         openModal("policyModal");
 
-    });
+    };
 
 
-// ======================================================
-// MEETING
-// ======================================================
+/* =================================================
+   ADD MEETING
+   ================================================= */
 
 document
     .getElementById("meetingForm")
-    .addEventListener("submit", async (event) => {
+    .addEventListener(
+        "submit",
+        async e => {
 
-        event.preventDefault();
-
-
-        const user = auth.currentUser;
-
-        if (!user) return;
+            e.preventDefault();
 
 
-        const title =
-            document.getElementById("meetingTitle").value.trim();
+            if (!isAdmin) {
 
-        const date =
-            document.getElementById("meetingDate").value;
+                showToast(
+                    "Only admin can add meetings."
+                );
 
-        const venue =
-            document.getElementById("meetingVenue").value.trim();
-
-        const agenda =
-            document.getElementById("meetingAgenda").value.trim();
-
-        const minutes =
-            document.getElementById("meetingMinutes").value.trim();
+                return;
+            }
 
 
-        try {
+            try {
 
-            await addDoc(
-                collection(
-                    db,
-                    "users",
-                    user.uid,
-                    "meetings"
-                ),
-                {
+                await addDoc(
+                    dataPath("meetings"),
+                    {
 
-                    title,
+                        title:
+                            document
+                                .getElementById(
+                                    "meetingTitle"
+                                )
+                                .value,
 
-                    date,
+                        date:
+                            document
+                                .getElementById(
+                                    "meetingDate"
+                                )
+                                .value,
 
-                    venue,
+                        venue:
+                            document
+                                .getElementById(
+                                    "meetingVenue"
+                                )
+                                .value,
 
-                    agenda,
+                        agenda:
+                            document
+                                .getElementById(
+                                    "meetingAgenda"
+                                )
+                                .value,
 
-                    minutes,
+                        minutes:
+                            document
+                                .getElementById(
+                                    "meetingMinutes"
+                                )
+                                .value,
 
-                    createdAt:
-                        serverTimestamp()
+                        action:
+                            document
+                                .getElementById(
+                                    "meetingAction"
+                                )
+                                .value,
 
-                }
-            );
+                        actionOwner:
+                            document
+                                .getElementById(
+                                    "actionOwner"
+                                )
+                                .value,
+
+                        actionDue:
+                            document
+                                .getElementById(
+                                    "actionDue"
+                                )
+                                .value,
+
+                        status:
+                            document
+                                .getElementById(
+                                    "meetingStatus"
+                                )
+                                .value,
+
+                        createdAt:
+                            serverTimestamp()
+
+                    }
+                );
 
 
-            document
-                .getElementById("meetingForm")
-                .reset();
+                e.target.reset();
 
+                closeModal(
+                    "meetingModal"
+                );
 
-            closeModal("meetingModal");
+                showToast(
+                    "Meeting added successfully."
+                );
 
-            showToast("Meeting saved successfully");
+            } catch (error) {
 
+                alert(error.message);
 
-        } catch (error) {
-
-            console.error(error);
-
-            alert(
-                "Could not save meeting: " +
-                error.message
-            );
+            }
 
         }
+    );
 
-    });
 
-
-// ======================================================
-// LOAD MEETINGS
-// ======================================================
+/* =================================================
+   LOAD MEETINGS
+   ================================================= */
 
 function loadMeetings() {
 
-    const user = auth.currentUser;
-
-    if (!user) return;
-
-
-    const meetingList =
-        document.getElementById("meetingList");
-
-    const recentMeetings =
-        document.getElementById("recentMeetings");
+    const q = query(
+        dataPath("meetings"),
+        orderBy(
+            "createdAt",
+            "desc"
+        )
+    );
 
 
-    const meetingsRef =
-        collection(
-            db,
-            "users",
-            user.uid,
-            "meetings"
-        );
+    onSnapshot(
+        q,
+        snapshot => {
 
-
-    const q =
-        query(
-            meetingsRef,
-            orderBy("createdAt", "desc")
-        );
-
-
-    onSnapshot(q, (snapshot) => {
-
-        meetingList.innerHTML = "";
-
-        recentMeetings.innerHTML = "";
-
-
-        document.getElementById("meetingCount")
-            .textContent =
-            snapshot.size;
-
-
-        if (snapshot.empty) {
-
-            meetingList.innerHTML =
-                `<p class="empty">No meetings found.</p>`;
-
-            recentMeetings.innerHTML =
-                `<p class="empty">No meetings yet.</p>`;
-
-            return;
-
-        }
-
-
-        snapshot.forEach((docSnapshot) => {
-
-            const meeting =
-                docSnapshot.data();
-
-
-            const id =
-                docSnapshot.id;
-
-
-            const card = document.createElement("div");
-
-            card.className = "record-card";
-
-
-            card.innerHTML = `
-
-                <h3>${escapeHTML(meeting.title)}</h3>
-
-                <p class="date">
-                    📅 ${escapeHTML(meeting.date)}
-                </p>
-
-                <p>
-                    📍 ${escapeHTML(meeting.venue)}
-                </p>
-
-                <p>
-                    <strong>Agenda:</strong><br>
-                    ${escapeHTML(meeting.agenda)}
-                </p>
-
-                <p>
-                    <strong>Minutes:</strong><br>
-                    ${escapeHTML(meeting.minutes || "Not added")}
-                </p>
-
-                <button class="delete-btn"
-                    data-id="${id}">
-                    Delete
-                </button>
-
-            `;
-
-
-            meetingList.appendChild(card);
-
+            const list =
+                document.getElementById(
+                    "meetingList"
+                );
 
             const recent =
-                document.createElement("div");
-
-            recent.className = "record-card";
-
-
-            recent.innerHTML = `
-
-                <h3>${escapeHTML(meeting.title)}</h3>
-
-                <p class="date">
-                    ${escapeHTML(meeting.date)}
-                </p>
-
-                <p>
-                    ${escapeHTML(meeting.venue)}
-                </p>
-
-            `;
+                document.getElementById(
+                    "recentMeetings"
+                );
 
 
-            recentMeetings.appendChild(recent);
+            list.innerHTML = "";
 
-        });
+            recent.innerHTML = "";
 
 
-        document
-            .querySelectorAll("#meetingList .delete-btn")
-            .forEach((button) => {
+            document
+                .getElementById(
+                    "meetingCount"
+                )
+                .textContent =
+                    snapshot.size;
 
-                button.addEventListener("click", () => {
 
-                    deleteMeeting(button.dataset.id);
+            let pendingActions = 0;
 
-                });
+
+            if (snapshot.empty) {
+
+                list.innerHTML =
+                    `<p class="empty">
+                        No meetings found.
+                    </p>`;
+
+                recent.innerHTML =
+                    `<p class="empty">
+                        No meetings yet.
+                    </p>`;
+
+                document
+                    .getElementById(
+                        "actionCount"
+                    )
+                    .textContent = 0;
+
+                return;
+            }
+
+
+            snapshot.forEach(item => {
+
+                const meeting =
+                    item.data();
+
+
+                if (
+                    meeting.action &&
+                    meeting.actionStatus !==
+                    "Completed"
+                ) {
+
+                    pendingActions++;
+
+                }
+
+
+                list.innerHTML += `
+
+                    <div class="record-card">
+
+                        <h3>
+                            ${safe(meeting.title)}
+                        </h3>
+
+                        <p>
+                            📅 ${safe(meeting.date)}
+                        </p>
+
+                        <p>
+                            📍 ${safe(meeting.venue)}
+                        </p>
+
+                        <p>
+                            <strong>
+                                Status:
+                            </strong>
+
+                            ${safe(
+                                meeting.status
+                            )}
+                        </p>
+
+                        <p>
+                            <strong>
+                                Agenda:
+                            </strong><br>
+
+                            ${safe(
+                                meeting.agenda
+                            )}
+                        </p>
+
+                        <p>
+                            <strong>
+                                Minutes / Decision:
+                            </strong><br>
+
+                            ${safe(
+                                meeting.minutes ||
+                                "Not added"
+                            )}
+                        </p>
+
+                        ${
+                            meeting.action
+                            ? `
+
+                            <p>
+                                <strong>
+                                    Action:
+                                </strong>
+
+                                ${safe(
+                                    meeting.action
+                                )}
+                            </p>
+
+                            <p>
+                                👤 ${safe(
+                                    meeting.actionOwner ||
+                                    "Not assigned"
+                                )}
+                            </p>
+
+                            <p>
+                                📅 Due:
+                                ${safe(
+                                    meeting.actionDue ||
+                                    "Not set"
+                                )}
+                            </p>
+
+                            `
+                            : ""
+                        }
+
+
+                        ${
+                            isAdmin
+                            ? `
+
+                            <button
+                                class="delete-btn"
+                                data-id="${item.id}"
+                            >
+                                Delete
+                            </button>
+
+                            `
+                            : ""
+                        }
+
+                    </div>
+
+                `;
+
+
+                recent.innerHTML += `
+
+                    <div class="record-card">
+
+                        <h3>
+                            ${safe(
+                                meeting.title
+                            )}
+                        </h3>
+
+                        <p>
+                            📅 ${safe(
+                                meeting.date
+                            )}
+                        </p>
+
+                        <p>
+                            📍 ${safe(
+                                meeting.venue
+                            )}
+                        </p>
+
+                        <p>
+                            ${safe(
+                                meeting.status
+                            )}
+                        </p>
+
+                    </div>
+
+                `;
 
             });
 
-    });
+
+            document
+                .getElementById(
+                    "actionCount"
+                )
+                .textContent =
+                    pendingActions;
+
+
+            list
+                .querySelectorAll(
+                    ".delete-btn"
+                )
+                .forEach(button => {
+
+                    button.onclick = () => {
+
+                        deleteRecord(
+                            "meetings",
+                            button.dataset.id
+                        );
+
+                    };
+
+                });
+
+        }
+    );
 
 }
 
 
-// ======================================================
-// DELETE MEETING
-// ======================================================
-
-async function deleteMeeting(id) {
-
-    const user = auth.currentUser;
-
-    if (!user) return;
-
-
-    const confirmDelete =
-        confirm("Delete this meeting?");
-
-
-    if (!confirmDelete) return;
-
-
-    try {
-
-        await deleteDoc(
-            doc(
-                db,
-                "users",
-                user.uid,
-                "meetings",
-                id
-            )
-        );
-
-
-        showToast("Meeting deleted");
-
-    } catch (error) {
-
-        console.error(error);
-
-    }
-
-}
-
-
-// ======================================================
-// EVENT
-// ======================================================
+/* =================================================
+   ADD EVENT
+   ================================================= */
 
 document
     .getElementById("eventForm")
-    .addEventListener("submit", async (event) => {
+    .addEventListener(
+        "submit",
+        async e => {
 
-        event.preventDefault();
-
-
-        const user = auth.currentUser;
-
-        if (!user) return;
+            e.preventDefault();
 
 
-        const title =
-            document.getElementById("eventTitle").value.trim();
+            if (!isAdmin) {
 
-        const date =
-            document.getElementById("eventDate").value;
+                showToast(
+                    "Only admin can add events."
+                );
 
-        const location =
-            document.getElementById("eventLocation").value.trim();
-
-        const description =
-            document.getElementById("eventDescription").value.trim();
+                return;
+            }
 
 
-        try {
+            try {
 
-            await addDoc(
-                collection(
-                    db,
-                    "users",
-                    user.uid,
-                    "events"
-                ),
-                {
+                await addDoc(
+                    dataPath("events"),
+                    {
 
-                    title,
+                        title:
+                            document
+                                .getElementById(
+                                    "eventTitle"
+                                )
+                                .value,
 
-                    date,
+                        date:
+                            document
+                                .getElementById(
+                                    "eventDate"
+                                )
+                                .value,
 
-                    location,
+                        location:
+                            document
+                                .getElementById(
+                                    "eventLocation"
+                                )
+                                .value,
 
-                    description,
+                        description:
+                            document
+                                .getElementById(
+                                    "eventDescription"
+                                )
+                                .value,
 
-                    createdAt:
-                        serverTimestamp()
+                        speaker:
+                            document
+                                .getElementById(
+                                    "eventSpeaker"
+                                )
+                                .value,
 
-                }
-            );
+                        archiveLink:
+                            document
+                                .getElementById(
+                                    "eventLink"
+                                )
+                                .value,
+
+                        createdAt:
+                            serverTimestamp()
+
+                    }
+                );
 
 
-            document
-                .getElementById("eventForm")
-                .reset();
+                e.target.reset();
 
+                closeModal(
+                    "eventModal"
+                );
 
-            closeModal("eventModal");
+                showToast(
+                    "Event added successfully."
+                );
 
-            showToast("Event saved successfully");
+            } catch (error) {
 
+                alert(error.message);
 
-        } catch (error) {
-
-            console.error(error);
-
-            alert(
-                "Could not save event: " +
-                error.message
-            );
+            }
 
         }
+    );
 
-    });
 
-
-// ======================================================
-// LOAD EVENTS
-// ======================================================
+/* =================================================
+   LOAD EVENTS
+   ================================================= */
 
 function loadEvents() {
 
-    const user = auth.currentUser;
+    const q = query(
+        dataPath("events"),
+        orderBy(
+            "createdAt",
+            "desc"
+        )
+    );
 
-    if (!user) return;
 
+    onSnapshot(
+        q,
+        snapshot => {
 
-    const list =
-        document.getElementById("eventList");
+            const list =
+                document.getElementById(
+                    "eventList"
+                );
 
 
-    const ref =
-        collection(
-            db,
-            "users",
-            user.uid,
-            "events"
-        );
-
-
-    const q =
-        query(
-            ref,
-            orderBy("createdAt", "desc")
-        );
-
-
-    onSnapshot(q, (snapshot) => {
-
-        list.innerHTML = "";
-
-
-        document.getElementById("eventCount")
-            .textContent =
-            snapshot.size;
-
-
-        if (snapshot.empty) {
-
-            list.innerHTML =
-                `<p class="empty">No events found.</p>`;
-
-            return;
-
-        }
-
-
-        snapshot.forEach((docSnapshot) => {
-
-            const event =
-                docSnapshot.data();
-
-
-            const card =
-                document.createElement("div");
-
-
-            card.className =
-                "record-card";
-
-
-            card.innerHTML = `
-
-                <h3>
-                    ${escapeHTML(event.title)}
-                </h3>
-
-                <p class="date">
-                    📅 ${escapeHTML(event.date)}
-                </p>
-
-                <p>
-                    📍 ${escapeHTML(event.location)}
-                </p>
-
-                <p>
-                    ${escapeHTML(event.description || "")}
-                </p>
-
-                <button
-                    class="delete-btn"
-                    data-id="${docSnapshot.id}">
-                    Delete
-                </button>
-
-            `;
-
-
-            list.appendChild(card);
-
-        });
-
-
-        list
-            .querySelectorAll(".delete-btn")
-            .forEach((button) => {
-
-                button.addEventListener("click", () => {
-
-                    deleteEvent(button.dataset.id);
-
-                });
-
-            });
-
-    });
-
-}
-
-
-// ======================================================
-// DELETE EVENT
-// ======================================================
-
-async function deleteEvent(id) {
-
-    const user = auth.currentUser;
-
-    if (!user) return;
-
-
-    if (!confirm("Delete this event?")) return;
-
-
-    try {
-
-        await deleteDoc(
-            doc(
-                db,
-                "users",
-                user.uid,
-                "events",
-                id
-            )
-        );
-
-
-        showToast("Event deleted");
-
-    } catch (error) {
-
-        console.error(error);
-
-    }
-
-}
-
-
-// ======================================================
-// POLICY
-// ======================================================
-
-document
-    .getElementById("policyForm")
-    .addEventListener("submit", async (event) => {
-
-        event.preventDefault();
-
-
-        const user = auth.currentUser;
-
-        if (!user) return;
-
-
-        const title =
-            document.getElementById("policyTitle").value.trim();
-
-        const version =
-            document.getElementById("policyVersion").value.trim();
-
-        const date =
-            document.getElementById("policyDate").value;
-
-        const description =
-            document.getElementById("policyDescription").value.trim();
-
-
-        try {
-
-            await addDoc(
-                collection(
-                    db,
-                    "users",
-                    user.uid,
-                    "policies"
-                ),
-                {
-
-                    title,
-
-                    version,
-
-                    date,
-
-                    description,
-
-                    createdAt:
-                        serverTimestamp()
-
-                }
-            );
+            list.innerHTML = "";
 
 
             document
-                .getElementById("policyForm")
-                .reset();
+                .getElementById(
+                    "eventCount"
+                )
+                .textContent =
+                    snapshot.size;
 
 
-            closeModal("policyModal");
+            if (snapshot.empty) {
 
-            showToast("Policy saved successfully");
+                list.innerHTML =
+                    `<p class="empty">
+                        No events found.
+                    </p>`;
 
-
-        } catch (error) {
-
-            console.error(error);
-
-            alert(
-                "Could not save policy: " +
-                error.message
-            );
-
-        }
-
-    });
+                return;
+            }
 
 
-// ======================================================
-// LOAD POLICIES
-// ======================================================
+            snapshot.forEach(item => {
 
-function loadPolicies() {
-
-    const user = auth.currentUser;
-
-    if (!user) return;
+                const event =
+                    item.data();
 
 
-    const list =
-        document.getElementById("policyList");
+                list.innerHTML += `
 
+                    <div class="record-card">
 
-    const ref =
-        collection(
-            db,
-            "users",
-            user.uid,
-            "policies"
-        );
+                        <h3>
+                            ${safe(event.title)}
+                        </h3>
 
+                        <p>
+                            📅 ${safe(event.date)}
+                        </p>
 
-    const q =
-        query(
-            ref,
-            orderBy("createdAt", "desc")
-        );
+                        <p>
+                            📍 ${safe(event.location)}
+                        </p>
 
+                        <p>
+                            ${safe(
+                                event.description
+                            )}
+                        </p>
 
-    onSnapshot(q, (snapshot) => {
+                        ${
+                            event.speaker
+                            ? `
+                            <p>
+                                🎤
+                                <strong>
+                                    Speaker:
+                                </strong>
+                                ${safe(
+                                    event.speaker
+                                )}
+                            </p>
+                            `
+                            : ""
+                        }
 
-        list.innerHTML = "";
+                        ${
+                            event.archiveLink
+                            ? `
+                            <p>
+                                🔗
+                                <a
+                                    href="${safe(
+                                        event.archiveLink
+                                    )}"
+                                    target="_blank"
+                                >
+                                    Event Archive
+                                </a>
+                            </p>
+                            `
+                            : ""
+                        }
 
+                        ${
+                            isAdmin
+                            ? `
 
-        document.getElementById("policyCount")
-            .textContent =
-            snapshot.size;
+                            <button
+                                class="delete-btn"
+                                data-id="${item.id}"
+                            >
+                                Delete
+                            </button>
 
+                            `
+                            : ""
+                        }
 
-        if (snapshot.empty) {
+                    </div>
 
-            list.innerHTML =
-                `<p class="empty">No policies found.</p>`;
-
-            return;
-
-        }
-
-
-        snapshot.forEach((docSnapshot) => {
-
-            const policy =
-                docSnapshot.data();
-
-
-            const card =
-                document.createElement("div");
-
-
-            card.className =
-                "record-card";
-
-
-            card.innerHTML = `
-
-                <h3>
-                    ${escapeHTML(policy.title)}
-                </h3>
-
-                <p>
-                    <strong>Version:</strong>
-                    ${escapeHTML(policy.version)}
-                </p>
-
-                <p class="date">
-                    Effective:
-                    ${escapeHTML(policy.date)}
-                </p>
-
-                <p>
-                    ${escapeHTML(policy.description)}
-                </p>
-
-                <button
-                    class="delete-btn"
-                    data-id="${docSnapshot.id}">
-                    Delete
-                </button>
-
-            `;
-
-
-            list.appendChild(card);
-
-        });
-
-
-        list
-            .querySelectorAll(".delete-btn")
-            .forEach((button) => {
-
-                button.addEventListener("click", () => {
-
-                    deletePolicy(button.dataset.id);
-
-                });
+                `;
 
             });
 
-    });
+
+            list
+                .querySelectorAll(
+                    ".delete-btn"
+                )
+                .forEach(button => {
+
+                    button.onclick = () => {
+
+                        deleteRecord(
+                            "events",
+                            button.dataset.id
+                        );
+
+                    };
+
+                });
+
+        }
+    );
 
 }
 
 
-// ======================================================
-// DELETE POLICY
-// ======================================================
+/* =================================================
+   ADD POLICY
+   ================================================= */
 
-async function deletePolicy(id) {
+document
+    .getElementById("policyForm")
+    .addEventListener(
+        "submit",
+        async e => {
 
-    const user = auth.currentUser;
-
-    if (!user) return;
+            e.preventDefault();
 
 
-    if (!confirm("Delete this policy?")) return;
+            if (!isAdmin) {
+
+                showToast(
+                    "Only admin can add policies."
+                );
+
+                return;
+            }
+
+
+            try {
+
+                await addDoc(
+                    dataPath("policies"),
+                    {
+
+                        title:
+                            document
+                                .getElementById(
+                                    "policyTitle"
+                                )
+                                .value,
+
+                        version:
+                            document
+                                .getElementById(
+                                    "policyVersion"
+                                )
+                                .value,
+
+                        date:
+                            document
+                                .getElementById(
+                                    "policyDate"
+                                )
+                                .value,
+
+                        description:
+                            document
+                                .getElementById(
+                                    "policyDescription"
+                                )
+                                .value,
+
+                        createdAt:
+                            serverTimestamp()
+
+                    }
+                );
+
+
+                e.target.reset();
+
+                closeModal(
+                    "policyModal"
+                );
+
+                showToast(
+                    "Policy added successfully."
+                );
+
+            } catch (error) {
+
+                alert(error.message);
+
+            }
+
+        }
+    );
+
+
+/* =================================================
+   LOAD POLICIES
+   ================================================= */
+
+function loadPolicies() {
+
+    const q = query(
+        dataPath("policies"),
+        orderBy(
+            "createdAt",
+            "desc"
+        )
+    );
+
+
+    onSnapshot(
+        q,
+        snapshot => {
+
+            const list =
+                document.getElementById(
+                    "policyList"
+                );
+
+
+            list.innerHTML = "";
+
+
+            document
+                .getElementById(
+                    "policyCount"
+                )
+                .textContent =
+                    snapshot.size;
+
+
+            if (snapshot.empty) {
+
+                list.innerHTML =
+                    `<p class="empty">
+                        No policies found.
+                    </p>`;
+
+                return;
+            }
+
+
+            snapshot.forEach(item => {
+
+                const policy =
+                    item.data();
+
+
+                list.innerHTML += `
+
+                    <div class="record-card">
+
+                        <h3>
+                            ${safe(
+                                policy.title
+                            )}
+                        </h3>
+
+                        <p>
+                            📚
+                            <strong>
+                                Version:
+                            </strong>
+
+                            ${safe(
+                                policy.version
+                            )}
+                        </p>
+
+                        <p>
+                            📅
+                            Effective:
+                            ${safe(
+                                policy.date
+                            )}
+                        </p>
+
+                        <p>
+                            ${safe(
+                                policy.description
+                            )}
+                        </p>
+
+
+                        ${
+                            isAdmin
+                            ? `
+
+                            <button
+                                class="delete-btn"
+                                data-id="${item.id}"
+                            >
+                                Delete
+                            </button>
+
+                            `
+                            : ""
+                        }
+
+                    </div>
+
+                `;
+
+            });
+
+
+            list
+                .querySelectorAll(
+                    ".delete-btn"
+                )
+                .forEach(button => {
+
+                    button.onclick = () => {
+
+                        deleteRecord(
+                            "policies",
+                            button.dataset.id
+                        );
+
+                    };
+
+                });
+
+        }
+    );
+
+}
+
+
+/* =================================================
+   DELETE
+   ================================================= */
+
+async function deleteRecord(
+    type,
+    id
+) {
+
+    if (!isAdmin) {
+
+        showToast(
+            "Only admin can delete."
+        );
+
+        return;
+    }
+
+
+    const confirmDelete =
+        confirm(
+            "Delete this record?"
+        );
+
+
+    if (!confirmDelete)
+        return;
 
 
     try {
 
         await deleteDoc(
+
             doc(
                 db,
                 "users",
-                user.uid,
-                "policies",
+                ADMIN_UID,
+                type,
                 id
             )
+
         );
 
 
-        showToast("Policy deleted");
+        showToast(
+            "Deleted successfully."
+        );
 
     } catch (error) {
 
-        console.error(error);
+        alert(
+            error.message
+        );
 
     }
 
 }
 
 
-// ======================================================
-// TOAST
-// ======================================================
+/* =================================================
+   SEARCH
+   ================================================= */
 
-function showToast(message) {
+document
+    .getElementById("searchInput")
+    .addEventListener(
+        "input",
+        e => {
+
+            const text =
+                e.target.value
+                    .toLowerCase();
+
+
+            document
+                .querySelectorAll(
+                    ".record-card"
+                )
+                .forEach(card => {
+
+                    const content =
+                        card.textContent
+                            .toLowerCase();
+
+
+                    card.style.display =
+                        content.includes(text)
+                            ? ""
+                            : "none";
+
+                });
+
+        }
+    );
+
+
+/* =================================================
+   TOAST
+   ================================================= */
+
+function showToast(text) {
 
     const toast =
-        document.getElementById("toast");
+        document.getElementById(
+            "toast"
+        );
 
 
     toast.textContent =
-        message;
+        text;
 
 
-    toast.classList.add("show");
+    toast.classList.add(
+        "show"
+    );
 
 
-    setTimeout(() => {
+    setTimeout(
+        () => {
 
-        toast.classList.remove("show");
+            toast.classList.remove(
+                "show"
+            );
 
-    }, 2500);
-
-}
-
-
-// ======================================================
-// FIREBASE ERROR MESSAGES
-// ======================================================
-
-function getFirebaseError(error) {
-
-    switch (error.code) {
-
-        case "auth/email-already-in-use":
-            return "This email is already registered.";
-
-        case "auth/invalid-email":
-            return "Invalid email address.";
-
-        case "auth/weak-password":
-            return "Password is too weak.";
-
-        case "auth/invalid-credential":
-            return "Incorrect email or password.";
-
-        case "auth/operation-not-allowed":
-            return "Email/Password login is not enabled in Firebase.";
-
-        case "auth/too-many-requests":
-            return "Too many attempts. Try again later.";
-
-        default:
-            return error.message;
-
-    }
+        },
+        2500
+    );
 
 }
 
 
-// ======================================================
-// SECURITY: HTML ESCAPE
-// ======================================================
+/* =================================================
+   SECURITY: ESCAPE HTML
+   ================================================= */
 
-function escapeHTML(value) {
+function safe(value) {
 
-    if (!value) return "";
+    return String(
+        value || ""
+    )
 
-    return String(value)
-        .replaceAll("&", "&amp;")
-        .replaceAll("<", "&lt;")
-        .replaceAll(">", "&gt;")
-        .replaceAll('"', "&quot;")
-        .replaceAll("'", "&#039;");
+        .replaceAll(
+            "&",
+            "&amp;"
+        )
+
+        .replaceAll(
+            "<",
+            "&lt;"
+        )
+
+        .replaceAll(
+            ">",
+            "&gt;"
+        )
+
+        .replaceAll(
+            '"',
+            "&quot;"
+        )
+
+        .replaceAll(
+            "'",
+            "&#039;"
+        );
+
+}
+
+
+/* =================================================
+   FIREBASE ERROR MESSAGES
+   ================================================= */
+
+function getError(error) {
+
+    const errors = {
+
+        "auth/email-already-in-use":
+            "This email is already registered.",
+
+        "auth/invalid-email":
+            "Invalid email address.",
+
+        "auth/weak-password":
+            "Password must be at least 6 characters.",
+
+        "auth/invalid-credential":
+            "Incorrect email or password."
+
+    };
+
+
+    return (
+        errors[error.code] ||
+        error.message
+    );
 
 }
