@@ -26,47 +26,38 @@ import {
 /* ================= FIREBASE ================= */
 
 const firebaseConfig = {
-
     apiKey: "AIzaSyB31XbqNeoQvpKthFXvHh2kN4WNaeihSlI",
-
-    authDomain:
-        "sagarhub-ffa62.firebaseapp.com",
-
-    projectId:
-        "sagarhub-ffa62",
-
-    storageBucket:
-        "sagarhub-ffa62.firebasestorage.app",
-
-    messagingSenderId:
-        "217343016577",
-
-    appId:
-        "1:217343016577:web:65974d97ebc202f8e91780",
-
-    measurementId:
-        "G-EX0E5LZZF6"
+    authDomain: "sagarhub-ffa62.firebaseapp.com",
+    projectId: "sagarhub-ffa62",
+    storageBucket: "sagarhub-ffa62.firebasestorage.app",
+    messagingSenderId: "217343016577",
+    appId: "1:217343016577:web:65974d97ebc202f8e91780",
+    measurementId: "G-EX0E5LZZF6"
 };
 
-
 const app = initializeApp(firebaseConfig);
-
 const auth = getAuth(app);
-
 const db = getFirestore(app);
 
 
-/* =================================================
-   IMPORTANT
-   
-   PUT YOUR ADMIN FIREBASE UID HERE
-   ================================================= */
+/* ================= ADMIN DATA ================= */
 
-const ADMIN_UID =
-    "PASTE_YOUR_ADMIN_UID_HERE";
+const ADMIN_UIDS = [
+    "aQ3rE6XskFWueVUFNiR2Oj4GxAZ2",
+    "dru1GGXszkVkdAeYAqpoCsDoehF2",
+    "N6lVEy0lLbQua6my0Ktokym3AD22"
+];
 
+const DATA_OWNER_UID =
+    "aQ3rE6XskFWueVUFNiR2Oj4GxAZ2";
 
 let isAdmin = false;
+
+let meetingUnsubscribe = null;
+let eventUnsubscribe = null;
+let policyUnsubscribe = null;
+
+let toastTimer = null;
 
 
 /* ================= DOM ================= */
@@ -104,110 +95,126 @@ const userAvatar =
 const userRole =
     document.getElementById("userRole");
 
+const pageTitle =
+    document.getElementById("pageTitle");
+
 
 /* ================= LOGIN / SIGNUP SWITCH ================= */
 
-document
-    .getElementById("showSignup")
-    .onclick = () => {
+const showSignupButton =
+    document.getElementById("showSignup");
+
+const showLoginButton =
+    document.getElementById("showLogin");
+
+if (showSignupButton) {
+    showSignupButton.onclick = () => {
 
         loginBox.classList.add("hidden");
-
         signupBox.classList.remove("hidden");
 
         loginMessage.textContent = "";
     };
+}
 
-
-document
-    .getElementById("showLogin")
-    .onclick = () => {
+if (showLoginButton) {
+    showLoginButton.onclick = () => {
 
         signupBox.classList.add("hidden");
-
         loginBox.classList.remove("hidden");
 
         signupMessage.textContent = "";
     };
+}
 
 
 /* ================= SIGNUP ================= */
 
-signupForm.addEventListener(
-    "submit",
-    async e => {
+if (signupForm) {
 
-        e.preventDefault();
+    signupForm.addEventListener(
+        "submit",
+        async e => {
 
-        const email =
-            document.getElementById(
-                "signupEmail"
-            ).value;
+            e.preventDefault();
 
-        const password =
-            document.getElementById(
-                "signupPassword"
-            ).value;
+            const email =
+                document.getElementById(
+                    "signupEmail"
+                ).value.trim();
 
-        try {
+            const password =
+                document.getElementById(
+                    "signupPassword"
+                ).value;
 
-            await createUserWithEmailAndPassword(
-                auth,
-                email,
-                password
-            );
+            try {
 
-            signupMessage.textContent =
-                "Account created successfully.";
+                await createUserWithEmailAndPassword(
+                    auth,
+                    email,
+                    password
+                );
 
-            signupForm.reset();
+                signupMessage.textContent =
+                    "Account created successfully.";
 
-        } catch (error) {
+                signupForm.reset();
 
-            signupMessage.textContent =
-                getError(error);
+            } catch (error) {
+
+                signupMessage.textContent =
+                    getError(error);
+
+            }
 
         }
-    }
-);
+    );
+
+}
 
 
 /* ================= LOGIN ================= */
 
-loginForm.addEventListener(
-    "submit",
-    async e => {
+if (loginForm) {
 
-        e.preventDefault();
+    loginForm.addEventListener(
+        "submit",
+        async e => {
 
-        const email =
-            document.getElementById(
-                "loginEmail"
-            ).value;
+            e.preventDefault();
 
-        const password =
-            document.getElementById(
-                "loginPassword"
-            ).value;
+            const email =
+                document.getElementById(
+                    "loginEmail"
+                ).value.trim();
 
-        try {
+            const password =
+                document.getElementById(
+                    "loginPassword"
+                ).value;
 
-            await signInWithEmailAndPassword(
-                auth,
-                email,
-                password
-            );
+            try {
 
-            loginMessage.textContent = "";
+                await signInWithEmailAndPassword(
+                    auth,
+                    email,
+                    password
+                );
 
-        } catch (error) {
+                loginMessage.textContent = "";
 
-            loginMessage.textContent =
-                getError(error);
+            } catch (error) {
+
+                loginMessage.textContent =
+                    getError(error);
+
+            }
 
         }
-    }
-);
+    );
+
+}
 
 
 /* ================= AUTH STATE ================= */
@@ -218,6 +225,8 @@ onAuthStateChanged(
 
         if (!user) {
 
+            isAdmin = false;
+
             authScreen.classList.remove(
                 "hidden"
             );
@@ -225,6 +234,10 @@ onAuthStateChanged(
             appScreen.classList.add(
                 "hidden"
             );
+
+            updateAdminUI();
+
+            stopListeners();
 
             return;
         }
@@ -240,19 +253,17 @@ onAuthStateChanged(
 
 
         userEmail.textContent =
-            user.email;
+            user.email || "User";
 
 
         userAvatar.textContent =
-            user.email
+            (user.email || "U")
                 .charAt(0)
                 .toUpperCase();
 
 
-        /* CHECK ADMIN */
-
         isAdmin =
-            user.uid === ADMIN_UID;
+            ADMIN_UIDS.includes(user.uid);
 
 
         userRole.textContent =
@@ -263,11 +274,10 @@ onAuthStateChanged(
 
         updateAdminUI();
 
+        showPage("dashboard");
 
         loadMeetings();
-
         loadEvents();
-
         loadPolicies();
 
     }
@@ -276,13 +286,26 @@ onAuthStateChanged(
 
 /* ================= LOGOUT ================= */
 
-document
-    .getElementById("logoutBtn")
-    .onclick = () => {
+const logoutBtn =
+    document.getElementById("logoutBtn");
 
-        signOut(auth);
+if (logoutBtn) {
+
+    logoutBtn.onclick = async () => {
+
+        try {
+
+            await signOut(auth);
+
+        } catch (error) {
+
+            showToast(error.message);
+
+        }
 
     };
+
+}
 
 
 /* ================= ADMIN UI ================= */
@@ -290,17 +313,11 @@ document
 function updateAdminUI() {
 
     const buttons = [
-
         "addMeetingBtn",
-
         "dashboardMeetingBtn",
-
         "addEventBtn",
-
         "addPolicyBtn"
-
     ];
-
 
     buttons.forEach(id => {
 
@@ -308,7 +325,6 @@ function updateAdminUI() {
             document.getElementById(id);
 
         if (!button) return;
-
 
         button.style.display =
             isAdmin
@@ -320,19 +336,14 @@ function updateAdminUI() {
 }
 
 
-/* =================================================
-   SHARED INSTITUTIONAL DATA
-
-   All users read ADMIN records.
-   Only ADMIN can create/delete.
-   ================================================= */
+/* ================= DATA PATH ================= */
 
 function dataPath(type) {
 
     return collection(
         db,
         "users",
-        ADMIN_UID,
+        DATA_OWNER_UID,
         type
     );
 
@@ -341,101 +352,146 @@ function dataPath(type) {
 
 /* ================= NAVIGATION ================= */
 
-document
-    .querySelectorAll(".nav-btn")
-    .forEach(button => {
+const navButtons =
+    document.querySelectorAll(
+        ".nav-btn"
+    );
 
-        button.onclick = () => {
+navButtons.forEach(button => {
+
+    button.addEventListener(
+        "click",
+        () => {
 
             const page =
                 button.dataset.page;
 
+            showPage(page);
 
-            document
-                .querySelectorAll(".page")
-                .forEach(p => {
+        }
+    );
 
-                    p.classList.add(
-                        "hidden"
-                    );
-
-                });
+});
 
 
-            document
-                .getElementById(
-                    page + "Page"
-                )
-                .classList.remove(
-                    "hidden"
-                );
+function showPage(page) {
+
+    document
+        .querySelectorAll(".page")
+        .forEach(section => {
+
+            section.classList.add(
+                "hidden"
+            );
+
+            section.classList.remove(
+                "active-page"
+            );
+
+        });
 
 
-            document
-                .querySelectorAll(".nav-btn")
-                .forEach(b => {
+    const selectedPage =
+        document.getElementById(
+            page + "Page"
+        );
 
-                    b.classList.remove(
-                        "active"
-                    );
+    if (selectedPage) {
 
-                });
+        selectedPage.classList.remove(
+            "hidden"
+        );
 
+        selectedPage.classList.add(
+            "active-page"
+        );
+
+    }
+
+
+    navButtons.forEach(button => {
+
+        button.classList.remove(
+            "active"
+        );
+
+        if (
+            button.dataset.page === page
+        ) {
 
             button.classList.add(
                 "active"
             );
 
-
-            const titles = {
-
-                dashboard:
-                    "Dashboard",
-
-                meetings:
-                    "Meetings",
-
-                events:
-                    "Events",
-
-                policies:
-                    "Policies & Rules"
-
-            };
-
-
-            document
-                .getElementById(
-                    "pageTitle"
-                )
-                .textContent =
-                    titles[page];
-
-        };
+        }
 
     });
+
+
+    const titles = {
+
+        dashboard:
+            "Dashboard",
+
+        meetings:
+            "Meetings",
+
+        events:
+            "Events & Archive",
+
+        policies:
+            "Policies & Rules"
+
+    };
+
+
+    if (pageTitle) {
+
+        pageTitle.textContent =
+            titles[page] ||
+            "Dashboard";
+
+    }
+
+}
 
 
 /* ================= MODALS ================= */
 
 function openModal(id) {
 
-    document
-        .getElementById(id)
-        .classList.remove(
-            "hidden"
+    if (!isAdmin) {
+
+        showToast(
+            "Only admin can perform this action."
         );
+
+        return;
+
+    }
+
+    const modal =
+        document.getElementById(id);
+
+    if (!modal) return;
+
+    modal.classList.remove(
+        "hidden"
+    );
 
 }
 
 
 function closeModal(id) {
 
-    document
-        .getElementById(id)
-        .classList.add(
-            "hidden"
-        );
+    const modal =
+        document.getElementById(id);
+
+    if (!modal) return;
+
+    modal.classList.add(
+        "hidden"
+    );
 
 }
 
@@ -444,64 +500,168 @@ document
     .querySelectorAll("[data-close]")
     .forEach(button => {
 
-        button.onclick = () => {
+        button.addEventListener(
+            "click",
+            () => {
 
-            closeModal(
-                button.dataset.close
-            );
+                closeModal(
+                    button.dataset.close
+                );
 
-        };
+            }
+        );
 
     });
 
 
-/* OPEN BUTTONS */
+/* ================= OPEN BUTTONS ================= */
 
-document
-    .getElementById("addMeetingBtn")
-    .onclick = () => {
+const addMeetingBtn =
+    document.getElementById(
+        "addMeetingBtn"
+    );
 
-        openModal("meetingModal");
+if (addMeetingBtn) {
+
+    addMeetingBtn.onclick = () => {
+
+        openModal(
+            "meetingModal"
+        );
 
     };
 
+}
 
-document
-    .getElementById(
+
+const dashboardMeetingBtn =
+    document.getElementById(
         "dashboardMeetingBtn"
-    )
-    .onclick = () => {
+    );
 
-        openModal("meetingModal");
+if (dashboardMeetingBtn) {
 
-    };
+    dashboardMeetingBtn.onclick = () => {
 
-
-document
-    .getElementById("addEventBtn")
-    .onclick = () => {
-
-        openModal("eventModal");
+        openModal(
+            "meetingModal"
+        );
 
     };
 
+}
 
-document
-    .getElementById("addPolicyBtn")
-    .onclick = () => {
 
-        openModal("policyModal");
+const addEventBtn =
+    document.getElementById(
+        "addEventBtn"
+    );
+
+if (addEventBtn) {
+
+    addEventBtn.onclick = () => {
+
+        openModal(
+            "eventModal"
+        );
 
     };
+
+}
+
+
+const addPolicyBtn =
+    document.getElementById(
+        "addPolicyBtn"
+    );
+
+if (addPolicyBtn) {
+
+    addPolicyBtn.onclick = () => {
+
+        openModal(
+            "policyModal"
+        );
+
+    };
+
+}
+
+
+/* ================= EMPTY STATE BUTTONS ================= */
+
+function attachEmptyStateButtons() {
+
+    const emptyMeetingBtn =
+        document.getElementById(
+            "emptyMeetingBtn"
+        );
+
+    if (emptyMeetingBtn) {
+
+        emptyMeetingBtn.onclick = () => {
+
+            openModal(
+                "meetingModal"
+            );
+
+        };
+
+    }
+
+
+    const emptyEventBtn =
+        document.getElementById(
+            "emptyEventBtn"
+        );
+
+    if (emptyEventBtn) {
+
+        emptyEventBtn.onclick = () => {
+
+            openModal(
+                "eventModal"
+            );
+
+        };
+
+    }
+
+
+    const emptyPolicyBtn =
+        document.getElementById(
+            "emptyPolicyBtn"
+        );
+
+    if (emptyPolicyBtn) {
+
+        emptyPolicyBtn.onclick = () => {
+
+            openModal(
+                "policyModal"
+            );
+
+        };
+
+    }
+
+}
+
+attachEmptyStateButtons();
 
 
 /* =================================================
    ADD MEETING
    ================================================= */
 
-document
-    .getElementById("meetingForm")
-    .addEventListener(
+const meetingForm =
+    document.getElementById(
+        "meetingForm"
+    );
+
+if (meetingForm) {
+
+    meetingForm.addEventListener(
         "submit",
         async e => {
 
@@ -515,6 +675,7 @@ document
                 );
 
                 return;
+
             }
 
 
@@ -529,7 +690,8 @@ document
                                 .getElementById(
                                     "meetingTitle"
                                 )
-                                .value,
+                                .value
+                                .trim(),
 
                         date:
                             document
@@ -543,35 +705,40 @@ document
                                 .getElementById(
                                     "meetingVenue"
                                 )
-                                .value,
+                                .value
+                                .trim(),
 
                         agenda:
                             document
                                 .getElementById(
                                     "meetingAgenda"
                                 )
-                                .value,
+                                .value
+                                .trim(),
 
                         minutes:
                             document
                                 .getElementById(
                                     "meetingMinutes"
                                 )
-                                .value,
+                                .value
+                                .trim(),
 
                         action:
                             document
                                 .getElementById(
                                     "meetingAction"
                                 )
-                                .value,
+                                .value
+                                .trim(),
 
                         actionOwner:
                             document
                                 .getElementById(
                                     "actionOwner"
                                 )
-                                .value,
+                                .value
+                                .trim(),
 
                         actionDue:
                             document
@@ -587,6 +754,9 @@ document
                                 )
                                 .value,
 
+                        createdBy:
+                            auth.currentUser.uid,
+
                         createdAt:
                             serverTimestamp()
 
@@ -594,7 +764,7 @@ document
                 );
 
 
-                e.target.reset();
+                meetingForm.reset();
 
                 closeModal(
                     "meetingModal"
@@ -606,12 +776,16 @@ document
 
             } catch (error) {
 
-                alert(error.message);
+                showToast(
+                    error.message
+                );
 
             }
 
         }
     );
+
+}
 
 
 /* =================================================
@@ -619,6 +793,13 @@ document
    ================================================= */
 
 function loadMeetings() {
+
+    if (meetingUnsubscribe) {
+
+        meetingUnsubscribe();
+
+    }
+
 
     const q = query(
         dataPath("meetings"),
@@ -629,239 +810,287 @@ function loadMeetings() {
     );
 
 
-    onSnapshot(
-        q,
-        snapshot => {
+    meetingUnsubscribe =
+        onSnapshot(
+            q,
+            snapshot => {
 
-            const list =
-                document.getElementById(
-                    "meetingList"
-                );
+                const list =
+                    document.getElementById(
+                        "meetingList"
+                    );
 
-            const recent =
-                document.getElementById(
-                    "recentMeetings"
-                );
-
-
-            list.innerHTML = "";
-
-            recent.innerHTML = "";
+                const recent =
+                    document.getElementById(
+                        "recentMeetings"
+                    );
 
 
-            document
-                .getElementById(
-                    "meetingCount"
-                )
-                .textContent =
-                    snapshot.size;
+                if (!list || !recent)
+                    return;
 
 
-            let pendingActions = 0;
+                list.innerHTML = "";
+
+                recent.innerHTML = "";
 
 
-            if (snapshot.empty) {
+                const meetingCount =
+                    document.getElementById(
+                        "meetingCount"
+                    );
 
-                list.innerHTML =
-                    `<p class="empty">
-                        No meetings found.
-                    </p>`;
-
-                recent.innerHTML =
-                    `<p class="empty">
-                        No meetings yet.
-                    </p>`;
-
-                document
-                    .getElementById(
+                const actionCount =
+                    document.getElementById(
                         "actionCount"
-                    )
-                    .textContent = 0;
-
-                return;
-            }
+                    );
 
 
-            snapshot.forEach(item => {
+                if (meetingCount) {
 
-                const meeting =
-                    item.data();
-
-
-                if (
-                    meeting.action &&
-                    meeting.actionStatus !==
-                    "Completed"
-                ) {
-
-                    pendingActions++;
+                    meetingCount.textContent =
+                        snapshot.size;
 
                 }
 
 
-                list.innerHTML += `
+                let pendingActions = 0;
 
-                    <div class="record-card">
+                let recentIndex = 0;
 
-                        <h3>
-                            ${safe(meeting.title)}
-                        </h3>
 
-                        <p>
-                            📅 ${safe(meeting.date)}
-                        </p>
+                if (snapshot.empty) {
 
-                        <p>
-                            📍 ${safe(meeting.venue)}
-                        </p>
+                    list.innerHTML = `
+                        <div class="empty-state large-empty">
+                            <div class="empty-icon">▣</div>
+                            <strong>No meeting records</strong>
+                            <span>
+                                Add a meeting to start building
+                                a searchable history of institutional decisions.
+                            </span>
+                            <button
+                                id="emptyMeetingBtn"
+                                class="secondary-btn empty-action"
+                                type="button"
+                            >
+                                Create meeting
+                            </button>
+                        </div>
+                    `;
 
-                        <p>
-                            <strong>
-                                Status:
-                            </strong>
 
-                            ${safe(
-                                meeting.status
-                            )}
-                        </p>
+                    recent.innerHTML = `
+                        <div class="empty-state">
+                            <div class="empty-icon">▣</div>
+                            <strong>No meetings yet</strong>
+                            <span>
+                                Create the first meeting record
+                                to build your institutional memory.
+                            </span>
+                        </div>
+                    `;
 
-                        <p>
-                            <strong>
-                                Agenda:
-                            </strong><br>
 
-                            ${safe(
-                                meeting.agenda
-                            )}
-                        </p>
+                    if (actionCount) {
 
-                        <p>
-                            <strong>
-                                Minutes / Decision:
-                            </strong><br>
+                        actionCount.textContent =
+                            "0";
 
-                            ${safe(
-                                meeting.minutes ||
-                                "Not added"
-                            )}
-                        </p>
+                    }
 
-                        ${
-                            meeting.action
-                            ? `
+
+                    attachEmptyStateButtons();
+
+                    return;
+
+                }
+
+
+                snapshot.forEach(item => {
+
+                    const meeting =
+                        item.data();
+
+
+                    if (
+                        meeting.action &&
+                        meeting.status !==
+                            "Completed"
+                    ) {
+
+                        pendingActions++;
+
+                    }
+
+
+                    list.innerHTML += `
+
+                        <div class="record-card">
+
+                            <h3>
+                                ${safe(meeting.title)}
+                            </h3>
+
+                            <p>
+                                📅 ${safe(meeting.date)}
+                            </p>
+
+                            <p>
+                                📍 ${safe(meeting.venue)}
+                            </p>
 
                             <p>
                                 <strong>
-                                    Action:
+                                    Status:
                                 </strong>
 
                                 ${safe(
-                                    meeting.action
+                                    meeting.status
                                 )}
                             </p>
 
                             <p>
-                                👤 ${safe(
-                                    meeting.actionOwner ||
-                                    "Not assigned"
-                                )}
-                            </p>
+                                <strong>
+                                    Agenda:
+                                </strong><br>
 
-                            <p>
-                                📅 Due:
                                 ${safe(
-                                    meeting.actionDue ||
-                                    "Not set"
+                                    meeting.agenda
                                 )}
                             </p>
 
-                            `
-                            : ""
-                        }
+                            <p>
+                                <strong>
+                                    Minutes / Decision:
+                                </strong><br>
+
+                                ${safe(
+                                    meeting.minutes ||
+                                    "Not added"
+                                )}
+                            </p>
+
+                            ${
+                                meeting.action
+                                ? `
+
+                                    <p>
+                                        <strong>
+                                            Action:
+                                        </strong>
+
+                                        ${safe(
+                                            meeting.action
+                                        )}
+                                    </p>
+
+                                    <p>
+                                        👤
+                                        ${safe(
+                                            meeting.actionOwner ||
+                                            "Not assigned"
+                                        )}
+                                    </p>
+
+                                    <p>
+                                        📅 Due:
+                                        ${safe(
+                                            meeting.actionDue ||
+                                            "Not set"
+                                        )}
+                                    </p>
+
+                                `
+                                : ""
+                            }
+
+                            ${
+                                isAdmin
+                                ? `
+
+                                    <button
+                                        class="delete-btn"
+                                        data-id="${safeAttribute(item.id)}"
+                                        type="button"
+                                    >
+                                        Delete
+                                    </button>
+
+                                `
+                                : ""
+                            }
+
+                        </div>
+
+                    `;
 
 
-                        ${
-                            isAdmin
-                            ? `
+                    if (recentIndex < 5) {
 
-                            <button
-                                class="delete-btn"
-                                data-id="${item.id}"
-                            >
-                                Delete
-                            </button>
+                        recent.innerHTML += `
 
-                            `
-                            : ""
-                        }
+                            <div class="record-card">
 
-                    </div>
+                                <h3>
+                                    ${safe(
+                                        meeting.title
+                                    )}
+                                </h3>
 
-                `;
+                                <p>
+                                    📅
+                                    ${safe(
+                                        meeting.date
+                                    )}
+                                </p>
 
+                                <p>
+                                    📍
+                                    ${safe(
+                                        meeting.venue
+                                    )}
+                                </p>
 
-                recent.innerHTML += `
+                                <p>
+                                    ${safe(
+                                        meeting.status
+                                    )}
+                                </p>
 
-                    <div class="record-card">
+                            </div>
 
-                        <h3>
-                            ${safe(
-                                meeting.title
-                            )}
-                        </h3>
+                        `;
 
-                        <p>
-                            📅 ${safe(
-                                meeting.date
-                            )}
-                        </p>
+                        recentIndex++;
 
-                        <p>
-                            📍 ${safe(
-                                meeting.venue
-                            )}
-                        </p>
-
-                        <p>
-                            ${safe(
-                                meeting.status
-                            )}
-                        </p>
-
-                    </div>
-
-                `;
-
-            });
-
-
-            document
-                .getElementById(
-                    "actionCount"
-                )
-                .textContent =
-                    pendingActions;
-
-
-            list
-                .querySelectorAll(
-                    ".delete-btn"
-                )
-                .forEach(button => {
-
-                    button.onclick = () => {
-
-                        deleteRecord(
-                            "meetings",
-                            button.dataset.id
-                        );
-
-                    };
+                    }
 
                 });
 
-        }
-    );
+
+                if (actionCount) {
+
+                    actionCount.textContent =
+                        pendingActions;
+
+                }
+
+
+                attachDeleteButtons(
+                    list,
+                    "meetings"
+                );
+
+            },
+            error => {
+
+                showToast(
+                    error.message
+                );
+
+            }
+        );
 
 }
 
@@ -870,9 +1099,14 @@ function loadMeetings() {
    ADD EVENT
    ================================================= */
 
-document
-    .getElementById("eventForm")
-    .addEventListener(
+const eventForm =
+    document.getElementById(
+        "eventForm"
+    );
+
+if (eventForm) {
+
+    eventForm.addEventListener(
         "submit",
         async e => {
 
@@ -886,6 +1120,7 @@ document
                 );
 
                 return;
+
             }
 
 
@@ -900,7 +1135,8 @@ document
                                 .getElementById(
                                     "eventTitle"
                                 )
-                                .value,
+                                .value
+                                .trim(),
 
                         date:
                             document
@@ -914,28 +1150,35 @@ document
                                 .getElementById(
                                     "eventLocation"
                                 )
-                                .value,
+                                .value
+                                .trim(),
 
                         description:
                             document
                                 .getElementById(
                                     "eventDescription"
                                 )
-                                .value,
+                                .value
+                                .trim(),
 
                         speaker:
                             document
                                 .getElementById(
                                     "eventSpeaker"
                                 )
-                                .value,
+                                .value
+                                .trim(),
 
                         archiveLink:
                             document
                                 .getElementById(
                                     "eventLink"
                                 )
-                                .value,
+                                .value
+                                .trim(),
+
+                        createdBy:
+                            auth.currentUser.uid,
 
                         createdAt:
                             serverTimestamp()
@@ -944,7 +1187,7 @@ document
                 );
 
 
-                e.target.reset();
+                eventForm.reset();
 
                 closeModal(
                     "eventModal"
@@ -956,12 +1199,16 @@ document
 
             } catch (error) {
 
-                alert(error.message);
+                showToast(
+                    error.message
+                );
 
             }
 
         }
     );
+
+}
 
 
 /* =================================================
@@ -969,6 +1216,13 @@ document
    ================================================= */
 
 function loadEvents() {
+
+    if (eventUnsubscribe) {
+
+        eventUnsubscribe();
+
+    }
+
 
     const q = query(
         dataPath("events"),
@@ -979,141 +1233,172 @@ function loadEvents() {
     );
 
 
-    onSnapshot(
-        q,
-        snapshot => {
+    eventUnsubscribe =
+        onSnapshot(
+            q,
+            snapshot => {
 
-            const list =
-                document.getElementById(
-                    "eventList"
-                );
+                const list =
+                    document.getElementById(
+                        "eventList"
+                    );
 
-
-            list.innerHTML = "";
-
-
-            document
-                .getElementById(
-                    "eventCount"
-                )
-                .textContent =
-                    snapshot.size;
+                if (!list) return;
 
 
-            if (snapshot.empty) {
-
-                list.innerHTML =
-                    `<p class="empty">
-                        No events found.
-                    </p>`;
-
-                return;
-            }
+                list.innerHTML = "";
 
 
-            snapshot.forEach(item => {
+                const eventCount =
+                    document.getElementById(
+                        "eventCount"
+                    );
 
-                const event =
-                    item.data();
+                if (eventCount) {
+
+                    eventCount.textContent =
+                        snapshot.size;
+
+                }
 
 
-                list.innerHTML += `
+                if (snapshot.empty) {
 
-                    <div class="record-card">
+                    list.innerHTML = `
+                        <div class="empty-state large-empty">
+                            <div class="empty-icon">◇</div>
+                            <strong>No archived events</strong>
+                            <span>
+                                Add events, conferences or institutional
+                                activities to preserve their history.
+                            </span>
+                            <button
+                                id="emptyEventBtn"
+                                class="secondary-btn empty-action"
+                                type="button"
+                            >
+                                Create event
+                            </button>
+                        </div>
+                    `;
 
-                        <h3>
-                            ${safe(event.title)}
-                        </h3>
+                    attachEmptyStateButtons();
 
-                        <p>
-                            📅 ${safe(event.date)}
-                        </p>
+                    return;
 
-                        <p>
-                            📍 ${safe(event.location)}
-                        </p>
+                }
 
-                        <p>
-                            ${safe(
-                                event.description
-                            )}
-                        </p>
 
-                        ${
-                            event.speaker
-                            ? `
+                snapshot.forEach(item => {
+
+                    const event =
+                        item.data();
+
+
+                    list.innerHTML += `
+
+                        <div class="record-card">
+
+                            <h3>
+                                ${safe(event.title)}
+                            </h3>
+
                             <p>
-                                🎤
-                                <strong>
-                                    Speaker:
-                                </strong>
+                                📅
+                                ${safe(event.date)}
+                            </p>
+
+                            <p>
+                                📍
+                                ${safe(event.location)}
+                            </p>
+
+                            <p>
                                 ${safe(
-                                    event.speaker
+                                    event.description
                                 )}
                             </p>
-                            `
-                            : ""
-                        }
 
-                        ${
-                            event.archiveLink
-                            ? `
-                            <p>
-                                🔗
-                                <a
-                                    href="${safe(
-                                        event.archiveLink
-                                    )}"
-                                    target="_blank"
-                                >
-                                    Event Archive
-                                </a>
-                            </p>
-                            `
-                            : ""
-                        }
+                            ${
+                                event.speaker
+                                ? `
 
-                        ${
-                            isAdmin
-                            ? `
+                                    <p>
+                                        🎤
+                                        <strong>
+                                            Speaker:
+                                        </strong>
 
-                            <button
-                                class="delete-btn"
-                                data-id="${item.id}"
-                            >
-                                Delete
-                            </button>
+                                        ${safe(
+                                            event.speaker
+                                        )}
+                                    </p>
 
-                            `
-                            : ""
-                        }
+                                `
+                                : ""
+                            }
 
-                    </div>
+                            ${
+                                event.archiveLink &&
+                                isSafeUrl(
+                                    event.archiveLink
+                                )
+                                ? `
 
-                `;
+                                    <p>
+                                        🔗
+                                        <a
+                                            href="${safeAttribute(
+                                                event.archiveLink
+                                            )}"
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                        >
+                                            Event Archive
+                                        </a>
+                                    </p>
 
-            });
+                                `
+                                : ""
+                            }
 
+                            ${
+                                isAdmin
+                                ? `
 
-            list
-                .querySelectorAll(
-                    ".delete-btn"
-                )
-                .forEach(button => {
+                                    <button
+                                        class="delete-btn"
+                                        data-id="${safeAttribute(item.id)}"
+                                        type="button"
+                                    >
+                                        Delete
+                                    </button>
 
-                    button.onclick = () => {
+                                `
+                                : ""
+                            }
 
-                        deleteRecord(
-                            "events",
-                            button.dataset.id
-                        );
+                        </div>
 
-                    };
+                    `;
 
                 });
 
-        }
-    );
+
+                attachDeleteButtons(
+                    list,
+                    "events"
+                );
+
+            },
+            error => {
+
+                showToast(
+                    error.message
+                );
+
+            }
+        );
 
 }
 
@@ -1122,9 +1407,14 @@ function loadEvents() {
    ADD POLICY
    ================================================= */
 
-document
-    .getElementById("policyForm")
-    .addEventListener(
+const policyForm =
+    document.getElementById(
+        "policyForm"
+    );
+
+if (policyForm) {
+
+    policyForm.addEventListener(
         "submit",
         async e => {
 
@@ -1138,6 +1428,7 @@ document
                 );
 
                 return;
+
             }
 
 
@@ -1152,14 +1443,16 @@ document
                                 .getElementById(
                                     "policyTitle"
                                 )
-                                .value,
+                                .value
+                                .trim(),
 
                         version:
                             document
                                 .getElementById(
                                     "policyVersion"
                                 )
-                                .value,
+                                .value
+                                .trim(),
 
                         date:
                             document
@@ -1173,7 +1466,11 @@ document
                                 .getElementById(
                                     "policyDescription"
                                 )
-                                .value,
+                                .value
+                                .trim(),
+
+                        createdBy:
+                            auth.currentUser.uid,
 
                         createdAt:
                             serverTimestamp()
@@ -1182,7 +1479,7 @@ document
                 );
 
 
-                e.target.reset();
+                policyForm.reset();
 
                 closeModal(
                     "policyModal"
@@ -1194,12 +1491,16 @@ document
 
             } catch (error) {
 
-                alert(error.message);
+                showToast(
+                    error.message
+                );
 
             }
 
         }
     );
+
+}
 
 
 /* =================================================
@@ -1207,6 +1508,13 @@ document
    ================================================= */
 
 function loadPolicies() {
+
+    if (policyUnsubscribe) {
+
+        policyUnsubscribe();
+
+    }
+
 
     const q = query(
         dataPath("policies"),
@@ -1217,121 +1525,169 @@ function loadPolicies() {
     );
 
 
-    onSnapshot(
-        q,
-        snapshot => {
+    policyUnsubscribe =
+        onSnapshot(
+            q,
+            snapshot => {
 
-            const list =
-                document.getElementById(
-                    "policyList"
-                );
+                const list =
+                    document.getElementById(
+                        "policyList"
+                    );
 
-
-            list.innerHTML = "";
-
-
-            document
-                .getElementById(
-                    "policyCount"
-                )
-                .textContent =
-                    snapshot.size;
+                if (!list) return;
 
 
-            if (snapshot.empty) {
-
-                list.innerHTML =
-                    `<p class="empty">
-                        No policies found.
-                    </p>`;
-
-                return;
-            }
+                list.innerHTML = "";
 
 
-            snapshot.forEach(item => {
+                const policyCount =
+                    document.getElementById(
+                        "policyCount"
+                    );
 
-                const policy =
-                    item.data();
+                if (policyCount) {
 
+                    policyCount.textContent =
+                        snapshot.size;
 
-                list.innerHTML += `
-
-                    <div class="record-card">
-
-                        <h3>
-                            ${safe(
-                                policy.title
-                            )}
-                        </h3>
-
-                        <p>
-                            📚
-                            <strong>
-                                Version:
-                            </strong>
-
-                            ${safe(
-                                policy.version
-                            )}
-                        </p>
-
-                        <p>
-                            📅
-                            Effective:
-                            ${safe(
-                                policy.date
-                            )}
-                        </p>
-
-                        <p>
-                            ${safe(
-                                policy.description
-                            )}
-                        </p>
+                }
 
 
-                        ${
-                            isAdmin
-                            ? `
+                if (snapshot.empty) {
 
+                    list.innerHTML = `
+                        <div class="empty-state large-empty">
+                            <div class="empty-icon">▤</div>
+                            <strong>No policy records</strong>
+                            <span>
+                                Add institutional policies, rules or
+                                guidelines to create a reliable reference library.
+                            </span>
                             <button
-                                class="delete-btn"
-                                data-id="${item.id}"
+                                id="emptyPolicyBtn"
+                                class="secondary-btn empty-action"
+                                type="button"
                             >
-                                Delete
+                                Create policy
                             </button>
+                        </div>
+                    `;
 
-                            `
-                            : ""
-                        }
+                    attachEmptyStateButtons();
 
-                    </div>
+                    return;
 
-                `;
-
-            });
+                }
 
 
-            list
-                .querySelectorAll(
-                    ".delete-btn"
-                )
-                .forEach(button => {
+                snapshot.forEach(item => {
 
-                    button.onclick = () => {
+                    const policy =
+                        item.data();
 
-                        deleteRecord(
-                            "policies",
-                            button.dataset.id
-                        );
 
-                    };
+                    list.innerHTML += `
+
+                        <div class="record-card">
+
+                            <h3>
+                                ${safe(
+                                    policy.title
+                                )}
+                            </h3>
+
+                            <p>
+                                📚
+                                <strong>
+                                    Version:
+                                </strong>
+
+                                ${safe(
+                                    policy.version
+                                )}
+                            </p>
+
+                            <p>
+                                📅
+                                Effective:
+                                ${safe(
+                                    policy.date
+                                )}
+                            </p>
+
+                            <p>
+                                ${safe(
+                                    policy.description
+                                )}
+                            </p>
+
+                            ${
+                                isAdmin
+                                ? `
+
+                                    <button
+                                        class="delete-btn"
+                                        data-id="${safeAttribute(item.id)}"
+                                        type="button"
+                                    >
+                                        Delete
+                                    </button>
+
+                                `
+                                : ""
+                            }
+
+                        </div>
+
+                    `;
 
                 });
 
-        }
-    );
+
+                attachDeleteButtons(
+                    list,
+                    "policies"
+                );
+
+            },
+            error => {
+
+                showToast(
+                    error.message
+                );
+
+            }
+        );
+
+}
+
+
+/* =================================================
+   DELETE BUTTONS
+   ================================================= */
+
+function attachDeleteButtons(
+    container,
+    type
+) {
+
+    container
+        .querySelectorAll(
+            ".delete-btn"
+        )
+        .forEach(button => {
+
+            button.onclick = () => {
+
+                deleteRecord(
+                    type,
+                    button.dataset.id
+                );
+
+            };
+
+        });
 
 }
 
@@ -1352,6 +1708,7 @@ async function deleteRecord(
         );
 
         return;
+
     }
 
 
@@ -1372,7 +1729,7 @@ async function deleteRecord(
             doc(
                 db,
                 "users",
-                ADMIN_UID,
+                DATA_OWNER_UID,
                 type,
                 id
             )
@@ -1386,7 +1743,7 @@ async function deleteRecord(
 
     } catch (error) {
 
-        alert(
+        showToast(
             error.message
         );
 
@@ -1399,15 +1756,25 @@ async function deleteRecord(
    SEARCH
    ================================================= */
 
-document
-    .getElementById("searchInput")
-    .addEventListener(
+const searchInput =
+    document.getElementById(
+        "searchInput"
+    ) ||
+    document.getElementById(
+        "meetingSearch"
+    );
+
+
+if (searchInput) {
+
+    searchInput.addEventListener(
         "input",
         e => {
 
             const text =
                 e.target.value
-                    .toLowerCase();
+                    .toLowerCase()
+                    .trim();
 
 
             document
@@ -1431,21 +1798,40 @@ document
         }
     );
 
+}
+
 
 /* =================================================
    TOAST
    ================================================= */
 
-function showToast(text) {
+function showToast(message) {
 
     const toast =
         document.getElementById(
             "toast"
         );
 
+    if (!toast) return;
 
-    toast.textContent =
-        text;
+
+    const content =
+        toast.querySelector(
+            ".toast-content span"
+        );
+
+
+    if (content) {
+
+        content.textContent =
+            message;
+
+    } else {
+
+        toast.textContent =
+            message;
+
+    }
 
 
     toast.classList.add(
@@ -1453,16 +1839,83 @@ function showToast(text) {
     );
 
 
-    setTimeout(
-        () => {
+    clearTimeout(
+        toastTimer
+    );
+
+
+    toastTimer =
+        setTimeout(
+            () => {
+
+                toast.classList.remove(
+                    "show"
+                );
+
+            },
+            2500
+        );
+
+}
+
+
+/* ================= TOAST CLOSE ================= */
+
+const toastClose =
+    document.querySelector(
+        ".toast-close"
+    );
+
+if (toastClose) {
+
+    toastClose.onclick = () => {
+
+        const toast =
+            document.getElementById(
+                "toast"
+            );
+
+        if (toast) {
 
             toast.classList.remove(
                 "show"
             );
 
-        },
-        2500
-    );
+        }
+
+    };
+
+}
+
+
+/* =================================================
+   STOP REALTIME LISTENERS
+   ================================================= */
+
+function stopListeners() {
+
+    if (meetingUnsubscribe) {
+
+        meetingUnsubscribe();
+        meetingUnsubscribe = null;
+
+    }
+
+
+    if (eventUnsubscribe) {
+
+        eventUnsubscribe();
+        eventUnsubscribe = null;
+
+    }
+
+
+    if (policyUnsubscribe) {
+
+        policyUnsubscribe();
+        policyUnsubscribe = null;
+
+    }
 
 }
 
@@ -1474,33 +1927,63 @@ function showToast(text) {
 function safe(value) {
 
     return String(
-        value || ""
+        value ?? ""
     )
-
         .replaceAll(
             "&",
             "&amp;"
         )
-
         .replaceAll(
             "<",
             "&lt;"
         )
-
         .replaceAll(
             ">",
             "&gt;"
         )
-
         .replaceAll(
             '"',
             "&quot;"
         )
-
         .replaceAll(
             "'",
             "&#039;"
         );
+
+}
+
+
+function safeAttribute(value) {
+
+    return safe(value);
+
+}
+
+
+/* =================================================
+   SAFE URL
+   ================================================= */
+
+function isSafeUrl(value) {
+
+    try {
+
+        const url =
+            new URL(
+                value,
+                window.location.href
+            );
+
+        return (
+            url.protocol === "http:" ||
+            url.protocol === "https:"
+        );
+
+    } catch {
+
+        return false;
+
+    }
 
 }
 
@@ -1523,14 +2006,29 @@ function getError(error) {
             "Password must be at least 6 characters.",
 
         "auth/invalid-credential":
-            "Incorrect email or password."
+            "Incorrect email or password.",
+
+        "auth/user-not-found":
+            "No account found with this email.",
+
+        "auth/wrong-password":
+            "Incorrect email or password.",
+
+        "auth/network-request-failed":
+            "Network error. Check your internet connection."
 
     };
 
 
     return (
         errors[error.code] ||
-        error.message
+        error.message ||
+        "Something went wrong."
     );
 
 }
+
+
+showPage(
+    "dashboard"
+);
