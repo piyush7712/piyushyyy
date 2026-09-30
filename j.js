@@ -60,7 +60,1126 @@ let policyUnsubscribe = null;
 let toastTimer = null;
 
 
-/* ================= DOM ================= */
+/* =========================================================
+   STUDENT PROBLEMS / GRIEVANCE SYSTEM
+   ========================================================= */
+
+
+/* ---------------------------------------------------------
+   VARIABLES
+   --------------------------------------------------------- */
+
+let problemUnsubscribe = null;
+
+let selectedProblemId = null;
+
+
+/* ---------------------------------------------------------
+   ELEMENTS
+   --------------------------------------------------------- */
+
+const addProblemBtn =
+    document.getElementById("addProblemBtn");
+
+const problemForm =
+    document.getElementById("problemForm");
+
+const problemResponseForm =
+    document.getElementById("problemResponseForm");
+
+const problemSearch =
+    document.getElementById("problemSearch");
+
+
+/* ---------------------------------------------------------
+   OPEN PROBLEM MODAL
+   --------------------------------------------------------- */
+
+if (addProblemBtn) {
+
+    addProblemBtn.addEventListener(
+        "click",
+        () => {
+
+            const modal =
+                document.getElementById(
+                    "problemModal"
+                );
+
+            if (modal) {
+
+                modal.classList.remove(
+                    "hidden"
+                );
+
+            }
+
+        }
+    );
+
+}
+
+
+/* ---------------------------------------------------------
+   CLOSE MODALS
+   --------------------------------------------------------- */
+
+document.addEventListener(
+    "click",
+    event => {
+
+        const closeButton =
+            event.target.closest(
+                "[data-close]"
+            );
+
+        if (!closeButton) return;
+
+        const modalId =
+            closeButton.dataset.close;
+
+        const modal =
+            document.getElementById(
+                modalId
+            );
+
+        if (modal) {
+
+            modal.classList.add(
+                "hidden"
+            );
+
+        }
+
+    }
+);
+
+
+/* ---------------------------------------------------------
+   ADD PROBLEM
+   --------------------------------------------------------- */
+
+if (problemForm) {
+
+    problemForm.addEventListener(
+        "submit",
+        async event => {
+
+            event.preventDefault();
+
+
+            if (!auth.currentUser) {
+
+                showToast(
+                    "Please login first."
+                );
+
+                return;
+
+            }
+
+
+            try {
+
+                const title =
+                    document
+                        .getElementById(
+                            "problemTitle"
+                        )
+                        .value
+                        .trim();
+
+
+                const category =
+                    document
+                        .getElementById(
+                            "problemCategory"
+                        )
+                        .value;
+
+
+                const priority =
+                    document
+                        .getElementById(
+                            "problemPriority"
+                        )
+                        .value;
+
+
+                const description =
+                    document
+                        .getElementById(
+                            "problemDescription"
+                        )
+                        .value
+                        .trim();
+
+
+                if (
+                    !title ||
+                    !category ||
+                    !description
+                ) {
+
+                    showToast(
+                        "Please fill all required fields."
+                    );
+
+                    return;
+
+                }
+
+
+                await addDoc(
+                    dataPath("problems"),
+                    {
+
+                        title: title,
+
+                        category: category,
+
+                        priority: priority,
+
+                        description: description,
+
+                        submittedBy:
+                            auth.currentUser.uid,
+
+                        submittedByEmail:
+                            auth.currentUser.email,
+
+                        status: "Pending",
+
+                        adminResponse: "",
+
+                        createdAt:
+                            Date.now(),
+
+                        resolvedAt: null
+
+                    }
+                );
+
+
+                problemForm.reset();
+
+
+                const modal =
+                    document.getElementById(
+                        "problemModal"
+                    );
+
+                if (modal) {
+
+                    modal.classList.add(
+                        "hidden"
+                    );
+
+                }
+
+
+                showToast(
+                    "Problem submitted successfully."
+                );
+
+
+            } catch (error) {
+
+                console.error(
+                    "ADD PROBLEM ERROR:",
+                    error
+                );
+
+                showToast(
+                    "Could not submit problem: " +
+                    error.message
+                );
+
+            }
+
+        }
+    );
+
+}
+
+
+/* ---------------------------------------------------------
+   LOAD PROBLEMS
+   --------------------------------------------------------- */
+
+function loadProblems() {
+
+    if (problemUnsubscribe) {
+
+        problemUnsubscribe();
+
+        problemUnsubscribe = null;
+
+    }
+
+
+    try {
+
+        const q =
+            query(
+                dataPath("problems")
+            );
+
+
+        problemUnsubscribe =
+            onSnapshot(
+                q,
+
+                snapshot => {
+
+                    renderProblems(
+                        snapshot
+                    );
+
+                },
+
+                error => {
+
+                    console.error(
+                        "PROBLEMS FIRESTORE ERROR:",
+                        error
+                    );
+
+                    showToast(
+                        "Problems error: " +
+                        error.message
+                    );
+
+                }
+            );
+
+
+    } catch (error) {
+
+        console.error(
+            "LOAD PROBLEMS ERROR:",
+            error
+        );
+
+    }
+
+}
+
+
+/* ---------------------------------------------------------
+   RENDER PROBLEMS
+   --------------------------------------------------------- */
+
+function renderProblems(snapshot) {
+
+    const list =
+        document.getElementById(
+            "problemList"
+        );
+
+    if (!list) return;
+
+
+    let total = snapshot.size;
+
+    let pending = 0;
+
+    let review = 0;
+
+    let resolved = 0;
+
+
+    snapshot.forEach(
+        item => {
+
+            const problem =
+                item.data();
+
+
+            if (
+                problem.status ===
+                "Pending"
+            ) {
+
+                pending++;
+
+            }
+
+
+            if (
+                problem.status ===
+                "Under Review"
+            ) {
+
+                review++;
+
+            }
+
+
+            if (
+                problem.status ===
+                "Resolved"
+            ) {
+
+                resolved++;
+
+            }
+
+        }
+    );
+
+
+    const totalElement =
+        document.getElementById(
+            "problemTotalCount"
+        );
+
+    const pendingElement =
+        document.getElementById(
+            "problemPendingCount"
+        );
+
+    const reviewElement =
+        document.getElementById(
+            "problemReviewCount"
+        );
+
+    const resolvedElement =
+        document.getElementById(
+            "problemResolvedCount"
+        );
+
+
+    if (totalElement) {
+
+        totalElement.textContent =
+            total;
+
+    }
+
+
+    if (pendingElement) {
+
+        pendingElement.textContent =
+            pending;
+
+    }
+
+
+    if (reviewElement) {
+
+        reviewElement.textContent =
+            review;
+
+    }
+
+
+    if (resolvedElement) {
+
+        resolvedElement.textContent =
+            resolved;
+
+    }
+
+
+    if (snapshot.empty) {
+
+        list.innerHTML = `
+            <div class="empty-state large-empty">
+
+                <div class="empty-icon">
+                    ?
+                </div>
+
+                <strong>
+                    No problems reported
+                </strong>
+
+                <span>
+                    Students can report their college-related
+                    problems here.
+                </span>
+
+            </div>
+        `;
+
+        return;
+
+    }
+
+
+    const problems = [];
+
+
+    snapshot.forEach(
+        item => {
+
+            problems.push({
+
+                id: item.id,
+
+                ...item.data()
+
+            });
+
+        }
+    );
+
+
+    problems.sort(
+        (a, b) =>
+            (b.createdAt || 0) -
+            (a.createdAt || 0)
+    );
+
+
+    list.innerHTML = "";
+
+
+    problems.forEach(
+        problem => {
+
+            const card =
+                document.createElement(
+                    "div"
+                );
+
+
+            card.className =
+                "problem-card";
+
+
+            const statusClass =
+                getProblemStatusClass(
+                    problem.status
+                );
+
+
+            const priorityClass =
+                String(
+                    problem.priority ||
+                    "Medium"
+                )
+                    .toLowerCase();
+
+
+            card.innerHTML = `
+
+                <div class="problem-meta">
+
+                    <span class="problem-badge">
+                        ${safe(problem.category || "Other")}
+                    </span>
+
+                    <span class="problem-priority ${priorityClass}">
+                        ${safe(problem.priority || "Medium")} Priority
+                    </span>
+
+                    <span class="problem-status ${statusClass}">
+                        ${safe(problem.status || "Pending")}
+                    </span>
+
+                </div>
+
+
+                <h3>
+                    ${safe(problem.title)}
+                </h3>
+
+
+                <p class="problem-description">
+                    ${safe(problem.description)}
+                </p>
+
+
+                <div class="problem-user">
+
+                    <strong>
+                        Submitted by:
+                    </strong>
+
+                    ${safe(problem.submittedByEmail || "Student")}
+
+                </div>
+
+
+                ${
+                    problem.adminResponse
+                    ? `
+
+                        <div class="problem-response">
+
+                            <div class="problem-response-title">
+                                Admin Response
+                            </div>
+
+                            <p>
+                                ${safe(problem.adminResponse)}
+                            </p>
+
+                        </div>
+
+                    `
+                    : ""
+                }
+
+
+                ${
+                    isAdmin
+                    ? `
+
+                        <div class="problem-actions">
+
+                            <button
+                                type="button"
+                                class="secondary-btn problem-review-btn"
+                                data-id="${safeAttribute(problem.id)}"
+                            >
+                                Review / Respond
+                            </button>
+
+                            <button
+                                type="button"
+                                class="delete-btn problem-delete-btn"
+                                data-id="${safeAttribute(problem.id)}"
+                            >
+                                Delete
+                            </button>
+
+                        </div>
+
+                    `
+                    : ""
+                }
+
+            `;
+
+
+            list.appendChild(card);
+
+        }
+    );
+
+
+    attachProblemButtons();
+
+}
+
+
+/* ---------------------------------------------------------
+   STATUS CLASS
+   --------------------------------------------------------- */
+
+function getProblemStatusClass(status) {
+
+    if (status === "Resolved") {
+
+        return "resolved";
+
+    }
+
+
+    if (status === "Under Review") {
+
+        return "review";
+
+    }
+
+
+    return "pending";
+
+}
+
+
+/* ---------------------------------------------------------
+   ADMIN BUTTONS
+   --------------------------------------------------------- */
+
+function attachProblemButtons() {
+
+    document
+        .querySelectorAll(
+            ".problem-review-btn"
+        )
+        .forEach(
+            button => {
+
+                button.addEventListener(
+                    "click",
+                    () => {
+
+                        openProblemResponse(
+                            button.dataset.id
+                        );
+
+                    }
+                );
+
+            }
+        );
+
+
+    document
+        .querySelectorAll(
+            ".problem-delete-btn"
+        )
+        .forEach(
+            button => {
+
+                button.addEventListener(
+                    "click",
+                    async () => {
+
+                        await deleteProblem(
+                            button.dataset.id
+                        );
+
+                    }
+                );
+
+            }
+        );
+
+}
+
+
+/* ---------------------------------------------------------
+   OPEN ADMIN RESPONSE
+   --------------------------------------------------------- */
+
+async function openProblemResponse(
+    problemId
+) {
+
+    if (!isAdmin) {
+
+        showToast(
+            "Only admin can respond."
+        );
+
+        return;
+
+    }
+
+
+    selectedProblemId =
+        problemId;
+
+
+    try {
+
+        const problemRef =
+            doc(
+                db,
+                "users",
+                DATA_OWNER_UID,
+                "problems",
+                problemId
+            );
+
+
+        /*
+         * We already have the data through the
+         * realtime listener, so find it from cards.
+         */
+
+        const snapshot =
+            await getDocs(
+                query(
+                    dataPath("problems")
+                )
+            );
+
+
+        let problemData = null;
+
+
+        snapshot.forEach(
+            item => {
+
+                if (
+                    item.id ===
+                    problemId
+                ) {
+
+                    problemData =
+                        item.data();
+
+                }
+
+            }
+        );
+
+
+        if (!problemData) {
+
+            showToast(
+                "Problem not found."
+            );
+
+            return;
+
+        }
+
+
+        const details =
+            document.getElementById(
+                "adminProblemDetails"
+            );
+
+
+        if (details) {
+
+            details.innerHTML = `
+
+                <h3>
+                    ${safe(problemData.title)}
+                </h3>
+
+                <p>
+                    <strong>Category:</strong>
+                    ${safe(problemData.category)}
+                </p>
+
+                <p>
+                    <strong>Priority:</strong>
+                    ${safe(problemData.priority)}
+                </p>
+
+                <p>
+                    <strong>Student:</strong>
+                    ${safe(problemData.submittedByEmail)}
+                </p>
+
+                <p>
+                    <strong>Problem:</strong><br>
+                    ${safe(problemData.description)}
+                </p>
+
+            `;
+
+        }
+
+
+        document
+            .getElementById(
+                "problemStatus"
+            )
+            .value =
+                problemData.status ||
+                "Pending";
+
+
+        document
+            .getElementById(
+                "adminResponse"
+            )
+            .value =
+                problemData.adminResponse ||
+                "";
+
+
+        const modal =
+            document.getElementById(
+                "problemResponseModal"
+            );
+
+
+        if (modal) {
+
+            modal.classList.remove(
+                "hidden"
+            );
+
+        }
+
+
+    } catch (error) {
+
+        console.error(
+            "OPEN PROBLEM ERROR:",
+            error
+        );
+
+        showToast(
+            error.message
+        );
+
+    }
+
+}
+
+
+/* ---------------------------------------------------------
+   ADMIN RESPONSE / RESOLUTION
+   --------------------------------------------------------- */
+
+if (problemResponseForm) {
+
+    problemResponseForm.addEventListener(
+        "submit",
+        async event => {
+
+            event.preventDefault();
+
+
+            if (!isAdmin) {
+
+                showToast(
+                    "Only admin can respond."
+                );
+
+                return;
+
+            }
+
+
+            if (!selectedProblemId) {
+
+                showToast(
+                    "No problem selected."
+                );
+
+                return;
+
+            }
+
+
+            try {
+
+                const status =
+                    document
+                        .getElementById(
+                            "problemStatus"
+                        )
+                        .value;
+
+
+                const response =
+                    document
+                        .getElementById(
+                            "adminResponse"
+                        )
+                        .value
+                        .trim();
+
+
+                if (!response) {
+
+                    showToast(
+                        "Please enter a response."
+                    );
+
+                    return;
+
+                }
+
+
+                const problemRef =
+                    doc(
+                        db,
+                        "users",
+                        DATA_OWNER_UID,
+                        "problems",
+                        selectedProblemId
+                    );
+
+
+                const updateData = {
+
+                    status: status,
+
+                    adminResponse: response,
+
+                    respondedBy:
+                        auth.currentUser.uid,
+
+                    respondedAt:
+                        Date.now()
+
+                };
+
+
+                if (
+                    status ===
+                    "Resolved"
+                ) {
+
+                    updateData.resolvedAt =
+                        Date.now();
+
+                } else {
+
+                    updateData.resolvedAt =
+                        null;
+
+                }
+
+
+                await updateDoc(
+                    problemRef,
+                    updateData
+                );
+
+
+                const modal =
+                    document.getElementById(
+                        "problemResponseModal"
+                    );
+
+
+                if (modal) {
+
+                    modal.classList.add(
+                        "hidden"
+                    );
+
+                }
+
+
+                selectedProblemId =
+                    null;
+
+
+                showToast(
+                    status === "Resolved"
+                    ? "Problem resolved successfully."
+                    : "Problem response updated."
+                );
+
+
+            } catch (error) {
+
+                console.error(
+                    "UPDATE PROBLEM ERROR:",
+                    error
+                );
+
+                showToast(
+                    error.message
+                );
+
+            }
+
+        }
+    );
+
+}
+
+
+/* ---------------------------------------------------------
+   DELETE PROBLEM
+   --------------------------------------------------------- */
+
+async function deleteProblem(
+    problemId
+) {
+
+    if (!isAdmin) {
+
+        showToast(
+            "Only admin can delete problems."
+        );
+
+        return;
+
+    }
+
+
+    const confirmDelete =
+        confirm(
+            "Delete this problem?"
+        );
+
+
+    if (!confirmDelete) return;
+
+
+    try {
+
+        await deleteDoc(
+            doc(
+                db,
+                "users",
+                DATA_OWNER_UID,
+                "problems",
+                problemId
+            )
+        );
+
+
+        showToast(
+            "Problem deleted successfully."
+        );
+
+
+    } catch (error) {
+
+        console.error(
+            "DELETE PROBLEM ERROR:",
+            error
+        );
+
+        showToast(
+            error.message
+        );
+
+    }
+
+}
+
+
+/* ---------------------------------------------------------
+   SEARCH PROBLEMS
+   --------------------------------------------------------- */
+
+if (problemSearch) {
+
+    problemSearch.addEventListener(
+        "input",
+        () => {
+
+            const value =
+                problemSearch.value
+                    .toLowerCase()
+                    .trim();
+
+
+            document
+                .querySelectorAll(
+                    ".problem-card"
+                )
+                .forEach(
+                    card => {
+
+                        const text =
+                            card.textContent
+                                .toLowerCase();
+
+
+                        card.style.display =
+                            text.includes(value)
+                            ? ""
+                            : "none";
+
+                    }
+                );
+
+        }
+    );
+
+}
+
+
+/* ---------------------------------------------------------
+   LOAD PROBLEMS AFTER LOGIN
+   ---------------------------------------------------------
+
+   IMPORTANT:
+   Call this from your existing
+   onAuthStateChanged() after login.
+*/
+
 
 const authScreen =
     document.getElementById("authScreen");
