@@ -311,20 +311,7 @@ function createStudentProblemModal() {
                     rows="5"
                     required
                 ></textarea>
-
-
-                <label>
-                    Feedback
-                </label>
-
-                <textarea
-                    id="studentProblemFeedback"
-                    rows="5"
-                    placeholder="Enter feedback, additional information or response..."
-                ></textarea>
-
-
-                <div
+<div
                     id="studentProblemAdminResponse"
                     class="problem-response"
                     style="display:none;"
@@ -791,10 +778,17 @@ function renderProblems(snapshot) {
                     problem.priority ||
                     "Medium"
                 ).toLowerCase();
+            let userActions = "";
+            if (!isAdmin && auth.currentUser && problem.submittedBy === auth.currentUser.uid) {
+                userActions = `
+                    <div class="problem-actions">
+                        <button type="button" class="secondary-btn problem-edit-btn" data-id="${safeAttribute(problem.id)}">Edit</button>
+                        <button type="button" class="delete-btn problem-delete-btn" data-id="${safeAttribute(problem.id)}">Delete</button>
+                    </div>
+                `;
+            }
 
             let adminActions = "";
-
-
             if (isAdmin) {
 
                 adminActions = `
@@ -937,8 +931,8 @@ function renderProblems(snapshot) {
 
 
                 ${responseHTML}
-
-                ${feedbackHTML}
+${feedbackHTML}
+${userActions}
 ${adminActions}
 
             `;
@@ -984,6 +978,13 @@ function getProblemStatusClass(status) {
    ========================================================= */
 
 function attachProblemButtons() {
+
+    document.querySelectorAll(".problem-edit-btn").forEach(button => {
+        button.onclick = () => openStudentProblemEdit(button.dataset.id);
+    });
+    document.querySelectorAll(".problem-delete-btn").forEach(button => {
+        button.onclick = () => deleteProblem(button.dataset.id);
+    });
 
     document
         .querySelectorAll(
@@ -1055,11 +1056,8 @@ async function openStudentProblemEdit(
     problemId
 ) {
 
-    showToast("Complaint edits are disabled. Admins can respond from Review / Respond.");
-    return;
-
     if (isAdmin) {
-        showToast("Only admins can respond to complaints.");
+        showToast("Admins respond from Review / Respond.");
         return;
     }
 
@@ -1159,17 +1157,7 @@ async function openStudentProblemEdit(
             )
             .value =
             problemData.description || "";
-
-
-        document
-            .getElementById(
-                "studentProblemFeedback"
-            )
-            .value =
-            problemData.studentFeedback || "";
-
-
-        const responseBox =
+const responseBox =
             document.getElementById(
                 "studentProblemAdminResponse"
             );
@@ -1271,11 +1259,8 @@ if (studentProblemEditForm) {
         async event => {
 
             event.preventDefault();
-            showToast("Users cannot respond to complaints. Admins can respond from Review / Respond.");
-            return;
-
-            if (isAdmin) {
-                showToast("Users cannot respond to complaints.");
+            if (isAdmin || !auth.currentUser) {
+                showToast(isAdmin ? "Admins use Review / Respond." : "Please login first.");
                 return;
             }
 
@@ -1386,18 +1371,7 @@ if (studentProblemEditForm) {
                         )
                         .value
                         .trim();
-
-
-                const feedback =
-                    document
-                        .getElementById(
-                            "studentProblemFeedback"
-                        )
-                        .value
-                        .trim();
-
-
-                if (
+if (
                     !title ||
                     !category ||
                     !description
@@ -1409,19 +1383,7 @@ if (studentProblemEditForm) {
 
                     return;
                 }
-
-
-                const oldFeedback =
-                    currentData.studentFeedback ||
-                    "";
-
-
-                const feedbackChanged =
-                    oldFeedback !==
-                    feedback;
-
-
-                await updateDoc(
+await updateDoc(
                     problemRef,
                     {
 
@@ -1432,22 +1394,9 @@ if (studentProblemEditForm) {
                         priority: priority,
 
                         description: description,
-
-                        studentFeedback:
-                            feedback,
-
-                        updatedAt:
+updatedAt:
                             Date.now(),
-
-                        feedbackUpdatedAt:
-                            feedbackChanged
-                                ? Date.now()
-                                : (
-                                    currentData.feedbackUpdatedAt ||
-                                    null
-                                )
-
-                    }
+}
                 );
 
 
@@ -1457,7 +1406,7 @@ if (studentProblemEditForm) {
 
 
                 showToast(
-                    "Problem and feedback updated successfully."
+                    "Complaint updated successfully."
                 );
 
 
@@ -1826,13 +1775,15 @@ async function deleteProblem(
     problemId
 ) {
 
-    showToast("Complaint deletion is disabled. Admins can review and respond.");
-    return;
+    if (!auth.currentUser || isAdmin) {
+        showToast("Only users can delete their own complaints.");
+        return;
+    }
 
-    if (!isAdmin) {
+    if (!auth.currentUser) {
 
         showToast(
-            "Only admin can delete problems."
+            "Please login first."
         );
 
         return;
@@ -1850,15 +1801,13 @@ async function deleteProblem(
 
     try {
 
-        await deleteDoc(
-            doc(
-                db,
-                "users",
-                DATA_OWNER_UID,
-                "problems",
-                problemId
-            )
-        );
+        const problemRef = doc(db, "users", DATA_OWNER_UID, "problems", problemId);
+        const problemSnapshot = await getDoc(problemRef);
+        if (!problemSnapshot.exists() || problemSnapshot.data().submittedBy !== auth.currentUser.uid) {
+            showToast("You can only delete your own complaint.");
+            return;
+        }
+        await deleteDoc(problemRef);
 
 
         showToast(
@@ -3936,6 +3885,8 @@ const feedbackVisibility =
         "feedbackVisibility"
     );
 
+let editingFeedbackId = null;
+
 const feedbackMessage =
     document.getElementById(
         "feedbackMessage"
@@ -3961,9 +3912,11 @@ if (addFeedbackBtn) {
                 return;
             }
 
-            if (feedbackForm) {
-                feedbackForm.reset();
-            }
+            editingFeedbackId = null;
+            if (feedbackForm) feedbackForm.reset();
+            const feedbackSubmitButton = feedbackForm?.querySelector('button[type="submit"]');
+            if (feedbackSubmitButton) feedbackSubmitButton.textContent = "Submit Feedback";
+            document.getElementById("feedbackModalTitle").textContent = "Give Feedback";
 
 
             if (feedbackRecord) {
@@ -4394,10 +4347,23 @@ if (feedbackForm) {
                  * THIS is the Firebase write.
                  */
 
-                await addDoc(
-                    dataPath("feedback"),
-                    feedbackData
-                );
+                const wasEditingFeedback = Boolean(editingFeedbackId);
+                if (editingFeedbackId) {
+                    const feedbackRef = doc(db, "users", DATA_OWNER_UID, "feedback", editingFeedbackId);
+                    const existingFeedback = await getDoc(feedbackRef);
+                    if (!existingFeedback.exists() || existingFeedback.data().submittedBy !== auth.currentUser.uid) {
+                        showToast("You can only update your own feedback.");
+                        return;
+                    }
+                    await updateDoc(feedbackRef, {
+                        type, recordId, recordTitle, rating, message, visibility,
+                        submittedByEmail: visibility === "Anonymous" ? "" : (auth.currentUser.email || ""),
+                        updatedAt: Date.now()
+                    });
+                    editingFeedbackId = null;
+                } else {
+                    await addDoc(dataPath("feedback"), feedbackData);
+                }
 
 
                 /*
@@ -4429,9 +4395,7 @@ if (feedbackForm) {
                 );
 
 
-                showToast(
-                    "Feedback submitted successfully."
-                );
+                showToast(wasEditingFeedback ? "Feedback updated successfully." : "Feedback submitted successfully.");
 
 
                 /*
@@ -4806,13 +4770,73 @@ function renderFeedback(snapshot) {
             `;
 
 
-            list.appendChild(
-                card
-            );
+            if (!isAdmin && auth.currentUser && feedback.submittedBy === auth.currentUser.uid) {
+                const actions = document.createElement("div");
+                actions.className = "problem-actions";
+                actions.innerHTML = `
+                    <button type="button" class="secondary-btn feedback-edit-btn" data-id="${safeAttribute(feedback.id)}">Edit</button>
+                    <button type="button" class="delete-btn feedback-delete-btn" data-id="${safeAttribute(feedback.id)}">Delete</button>
+                `;
+                card.appendChild(actions);
+            }
+
+            list.appendChild(card);
 
         }
     );
 
+    list.querySelectorAll(".feedback-edit-btn").forEach(button => {
+        button.onclick = () => openFeedbackEdit(button.dataset.id);
+    });
+    list.querySelectorAll(".feedback-delete-btn").forEach(button => {
+        button.onclick = () => deleteFeedback(button.dataset.id);
+    });
+
+}
+
+
+async function openFeedbackEdit(feedbackId) {
+    if (!auth.currentUser || isAdmin) return;
+    try {
+        const ref = doc(db, "users", DATA_OWNER_UID, "feedback", feedbackId);
+        const snap = await getDoc(ref);
+        if (!snap.exists() || snap.data().submittedBy !== auth.currentUser.uid) {
+            showToast("You can only edit your own feedback.");
+            return;
+        }
+        const data = snap.data();
+        editingFeedbackId = feedbackId;
+        feedbackForm.reset();
+        feedbackType.value = data.type || "";
+        await loadFeedbackRecords();
+        feedbackRecord.value = data.recordId || "";
+        feedbackRating.value = String(data.rating || "");
+        feedbackVisibility.value = data.visibility || "Identified";
+        feedbackMessage.value = data.message || "";
+        document.getElementById("feedbackModalTitle").textContent = "Edit Feedback";
+        const button = feedbackForm.querySelector('button[type="submit"]');
+        if (button) button.textContent = "Save Changes";
+        feedbackModal.classList.remove("hidden");
+    } catch (error) {
+        showToast("Could not open feedback: " + getErrorMessage(error));
+    }
+}
+
+async function deleteFeedback(feedbackId) {
+    if (!auth.currentUser || isAdmin) return;
+    if (!confirm("Delete this feedback? This cannot be undone.")) return;
+    try {
+        const ref = doc(db, "users", DATA_OWNER_UID, "feedback", feedbackId);
+        const snap = await getDoc(ref);
+        if (!snap.exists() || snap.data().submittedBy !== auth.currentUser.uid) {
+            showToast("You can only delete your own feedback.");
+            return;
+        }
+        await deleteDoc(ref);
+        showToast("Feedback deleted successfully.");
+    } catch (error) {
+        showToast("Could not delete feedback: " + getErrorMessage(error));
+    }
 }
 
 
