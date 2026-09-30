@@ -19,7 +19,9 @@ import {
     doc,
     query,
     orderBy,
-    serverTimestamp
+    serverTimestamp,
+    getDocs,
+    updateDoc
 } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-firestore.js";
 
 
@@ -1398,6 +1400,7 @@ onAuthStateChanged(
         loadMeetings();
         loadEvents();
         loadPolicies();
+        loadProblems();
 
     }
 );
@@ -3030,12 +3033,14 @@ function stopListeners() {
 
 
     if (policyUnsubscribe) {
-
         policyUnsubscribe();
         policyUnsubscribe = null;
-
     }
 
+    if (problemUnsubscribe) {
+        problemUnsubscribe();
+        problemUnsubscribe = null;
+    }
 }
 
 
