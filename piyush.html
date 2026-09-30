@@ -14,7 +14,7 @@
 <link rel="stylesheet" href="yy.css">
 </head>
 
-<body>
+<body
 
 <section id="authScreen" class="auth-screen">
 <div class="auth-background-grid"></div>
@@ -1084,7 +1084,377 @@ Save policy
 <button class="toast-close" type="button" aria-label="Close notification">
 ×
 </button>
+<!-- =========================
+     STUDENT PROBLEMS PAGE
+     ========================= -->
 
+<section id="problemsPage" class="page">
+
+    <div class="page-header">
+        <div>
+            <span class="eyebrow">STUDENT SUPPORT</span>
+            <h1>Student Problems</h1>
+            <p>
+                Submit a college-related problem and track its resolution.
+            </p>
+        </div>
+
+        <!-- Student button -->
+        <button
+            id="addProblemBtn"
+            class="primary-btn"
+            type="button"
+        >
+            + Report Problem
+        </button>
+    </div>
+
+
+    <!-- Statistics -->
+
+    <div class="stats-grid problem-stats">
+
+        <div class="stat-card">
+            <span>Total Problems</span>
+            <strong id="problemTotalCount">0</strong>
+        </div>
+
+        <div class="stat-card">
+            <span>Pending</span>
+            <strong id="problemPendingCount">0</strong>
+        </div>
+
+        <div class="stat-card">
+            <span>Under Review</span>
+            <strong id="problemReviewCount">0</strong>
+        </div>
+
+        <div class="stat-card">
+            <span>Resolved</span>
+            <strong id="problemResolvedCount">0</strong>
+        </div>
+
+    </div>
+
+
+    <!-- Problems -->
+
+    <div class="section-card">
+
+        <div class="section-card-header">
+            <div>
+                <h2>Reported Problems</h2>
+                <p>
+                    Problems submitted by students.
+                </p>
+            </div>
+
+            <input
+                type="text"
+                id="problemSearch"
+                class="search-input"
+                placeholder="Search problems..."
+            >
+        </div>
+
+        <div id="problemList" class="records-grid">
+
+            <div class="empty-state">
+                <strong>No problems reported yet.</strong>
+            </div>
+
+        </div>
+
+    </div>
+
+</section>
+
+
+<!-- =========================
+     ADD PROBLEM MODAL
+     ========================= -->
+
+<div
+    id="problemModal"
+    class="modal hidden"
+>
+
+    <div class="modal-content">
+
+        <div class="modal-header">
+
+            <div>
+                <span class="eyebrow">STUDENT SUPPORT</span>
+                <h2>Report a Problem</h2>
+                <p>
+                    Tell the administration about your problem.
+                </p>
+            </div>
+
+            <button
+                class="modal-close"
+                data-close="problemModal"
+                type="button"
+            >
+                ×
+            </button>
+
+        </div>
+
+
+        <form id="problemForm">
+
+            <div class="form-group">
+
+                <label for="problemTitle">
+                    Problem Title
+                </label>
+
+                <input
+                    type="text"
+                    id="problemTitle"
+                    placeholder="Example: Library books not available"
+                    required
+                >
+
+            </div>
+
+
+            <div class="form-row">
+
+                <div class="form-group">
+
+                    <label for="problemCategory">
+                        Category
+                    </label>
+
+                    <select
+                        id="problemCategory"
+                        required
+                    >
+
+                        <option value="">
+                            Select category
+                        </option>
+
+                        <option value="Academic">
+                            Academic
+                        </option>
+
+                        <option value="Library">
+                            Library
+                        </option>
+
+                        <option value="Hostel">
+                            Hostel
+                        </option>
+
+                        <option value="Infrastructure">
+                            Infrastructure
+                        </option>
+
+                        <option value="Fees">
+                            Fees
+                        </option>
+
+                        <option value="Technical">
+                            Technical
+                        </option>
+
+                        <option value="Faculty">
+                            Faculty
+                        </option>
+
+                        <option value="Other">
+                            Other
+                        </option>
+
+                    </select>
+
+                </div>
+
+
+                <div class="form-group">
+
+                    <label for="problemPriority">
+                        Priority
+                    </label>
+
+                    <select
+                        id="problemPriority"
+                        required
+                    >
+
+                        <option value="Low">
+                            Low
+                        </option>
+
+                        <option value="Medium" selected>
+                            Medium
+                        </option>
+
+                        <option value="High">
+                            High
+                        </option>
+
+                        <option value="Urgent">
+                            Urgent
+                        </option>
+
+                    </select>
+
+                </div>
+
+            </div>
+
+
+            <div class="form-group">
+
+                <label for="problemDescription">
+                    Describe the Problem
+                </label>
+
+                <textarea
+                    id="problemDescription"
+                    rows="6"
+                    placeholder="Explain your problem clearly..."
+                    required
+                ></textarea>
+
+            </div>
+
+
+            <div class="modal-actions">
+
+                <button
+                    type="button"
+                    class="secondary-btn"
+                    data-close="problemModal"
+                >
+                    Cancel
+                </button>
+
+                <button
+                    type="submit"
+                    class="primary-btn"
+                >
+                    Submit Problem
+                </button>
+
+            </div>
+
+        </form>
+
+    </div>
+
+</div>
+
+
+<!-- =========================
+     ADMIN RESPONSE MODAL
+     ========================= -->
+
+<div
+    id="problemResponseModal"
+    class="modal hidden"
+>
+
+    <div class="modal-content">
+
+        <div class="modal-header">
+
+            <div>
+                <span class="eyebrow">ADMIN PANEL</span>
+                <h2>Resolve Problem</h2>
+                <p>
+                    Review the student's problem and provide a solution.
+                </p>
+            </div>
+
+            <button
+                class="modal-close"
+                data-close="problemResponseModal"
+                type="button"
+            >
+                ×
+            </button>
+
+        </div>
+
+
+        <div
+            id="adminProblemDetails"
+            class="problem-details"
+        ></div>
+
+
+        <form id="problemResponseForm">
+
+            <div class="form-group">
+
+                <label for="problemStatus">
+                    Status
+                </label>
+
+                <select id="problemStatus">
+
+                    <option value="Pending">
+                        Pending
+                    </option>
+
+                    <option value="Under Review">
+                        Under Review
+                    </option>
+
+                    <option value="Resolved">
+                        Resolved
+                    </option>
+
+                </select>
+
+            </div>
+
+
+            <div class="form-group">
+
+                <label for="adminResponse">
+                    Admin Response / Solution
+                </label>
+
+                <textarea
+                    id="adminResponse"
+                    rows="6"
+                    placeholder="Write the solution or response..."
+                    required
+                ></textarea>
+
+            </div>
+
+
+            <div class="modal-actions">
+
+                <button
+                    type="button"
+                    class="secondary-btn"
+                    data-close="problemResponseModal"
+                >
+                    Cancel
+                </button>
+
+                <button
+                    type="submit"
+                    class="primary-btn"
+                >
+                    Save Response
+                </button>
+
+            </div>
+
+        </form>
+
+    </div>
+
+</div>
 </div>
 
 
