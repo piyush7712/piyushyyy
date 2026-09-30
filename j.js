@@ -389,6 +389,11 @@ if (addProblemBtn) {
         "click",
         () => {
 
+            if (!auth.currentUser || isAdmin) {
+                showToast("Only users can submit complaints.");
+                return;
+            }
+
             const modal =
                 document.getElementById(
                     "problemModal"
@@ -416,10 +421,10 @@ if (problemForm) {
 
             event.preventDefault();
 
-            if (!auth.currentUser) {
+            if (!auth.currentUser || isAdmin) {
 
                 showToast(
-                    "Please login first."
+                    isAdmin ? "Admins cannot submit complaints." : "Please login first."
                 );
 
                 return;
@@ -787,36 +792,6 @@ function renderProblems(snapshot) {
                     "Medium"
                 ).toLowerCase();
 
-
-            let studentActions = "";
-
-
-            if (
-                !isAdmin &&
-                auth.currentUser &&
-                problem.submittedBy ===
-                auth.currentUser.uid
-            ) {
-
-                studentActions = `
-
-                    <div class="problem-actions">
-
-                        <button
-                            type="button"
-                            class="secondary-btn problem-edit-btn"
-                            data-id="${safeAttribute(problem.id)}"
-                        >
-                            Edit Problem / Feedback
-                        </button>
-
-                    </div>
-
-                `;
-
-            }
-
-
             let adminActions = "";
 
 
@@ -832,14 +807,6 @@ function renderProblems(snapshot) {
                             data-id="${safeAttribute(problem.id)}"
                         >
                             Review / Respond
-                        </button>
-
-                        <button
-                            type="button"
-                            class="delete-btn problem-delete-btn"
-                            data-id="${safeAttribute(problem.id)}"
-                        >
-                            Delete
                         </button>
 
                     </div>
@@ -972,10 +939,7 @@ function renderProblems(snapshot) {
                 ${responseHTML}
 
                 ${feedbackHTML}
-
-                ${studentActions}
-
-                ${adminActions}
+${adminActions}
 
             `;
 
@@ -1090,6 +1054,14 @@ function attachProblemButtons() {
 async function openStudentProblemEdit(
     problemId
 ) {
+
+    showToast("Complaint edits are disabled. Admins can respond from Review / Respond.");
+    return;
+
+    if (isAdmin) {
+        showToast("Only admins can respond to complaints.");
+        return;
+    }
 
     if (!auth.currentUser) {
 
@@ -1299,7 +1271,13 @@ if (studentProblemEditForm) {
         async event => {
 
             event.preventDefault();
+            showToast("Users cannot respond to complaints. Admins can respond from Review / Respond.");
+            return;
 
+            if (isAdmin) {
+                showToast("Users cannot respond to complaints.");
+                return;
+            }
 
             if (!auth.currentUser) {
 
@@ -1848,6 +1826,9 @@ async function deleteProblem(
     problemId
 ) {
 
+    showToast("Complaint deletion is disabled. Admins can review and respond.");
+    return;
+
     if (!isAdmin) {
 
         showToast(
@@ -2184,6 +2165,8 @@ onAuthStateChanged(
 
             updateAdminUI();
 
+            updateSupportUI();
+
             return;
         }
 
@@ -2246,6 +2229,7 @@ onAuthStateChanged(
 
         updateAdminUI();
 
+        updateSupportUI();
 
         showPage(
             "dashboard"
@@ -2299,6 +2283,25 @@ if (logoutBtn) {
 /* =========================================================
    ADMIN UI
    ========================================================= */
+
+function updateSupportUI() {
+
+    const isLoggedIn = Boolean(auth.currentUser);
+
+    document.querySelectorAll(
+        '.nav-btn[data-page="problems"], .nav-btn[data-page="feedback"]'
+    ).forEach(button => {
+        button.style.display = isLoggedIn ? '' : 'none';
+    });
+
+    const canSubmit = isLoggedIn && !isAdmin;
+    ["addProblemBtn", "addFeedbackBtn"].forEach(id => {
+        const button = document.getElementById(id);
+        if (button) {
+            button.style.display = canSubmit ? '' : 'none';
+        }
+    });
+}
 
 function updateAdminUI() {
 
@@ -2365,6 +2368,10 @@ navButtons.forEach(
 
 
 function showPage(page) {
+
+    if ((page === "problems" || page === "feedback") && !auth.currentUser) {
+        return;
+    }
 
     document
         .querySelectorAll(
@@ -3945,15 +3952,14 @@ if (addFeedbackBtn) {
         "click",
         async () => {
 
-            if (!auth.currentUser) {
+            if (!auth.currentUser || isAdmin) {
 
                 showToast(
-                    "Please login first."
+                    isAdmin ? "Admins cannot submit feedback." : "Please login first."
                 );
 
                 return;
             }
-
 
             if (feedbackForm) {
                 feedbackForm.reset();
@@ -4207,10 +4213,10 @@ if (feedbackForm) {
             event.preventDefault();
 
 
-            if (!auth.currentUser) {
+            if (!auth.currentUser || isAdmin) {
 
                 showToast(
-                    "Please login first."
+                    isAdmin ? "Admins cannot submit feedback." : "Please login first."
                 );
 
                 return;
