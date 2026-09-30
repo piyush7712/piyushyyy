@@ -1,3 +1,5 @@
+console.log("javascript is running!");
+
 import {
     initializeApp
 } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-app.js";
@@ -21,14 +23,12 @@ import {
     orderBy,
     serverTimestamp,
     getDocs,
-    getDoc,
-    updateDoc,
-    where
+    updateDoc
 } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-firestore.js";
 
 
 /* =========================================================
-   FIREBASE CONFIG
+   FIREBASE
    ========================================================= */
 
 const firebaseConfig = {
@@ -45,9 +45,12 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 
+console.log("Firebase initialized successfully");
+console.log("Firestore connected successfully");
+
 
 /* =========================================================
-   ADMIN UID
+   ADMIN DATA
    ========================================================= */
 
 const ADMIN_UIDS = [
@@ -56,82 +59,24 @@ const ADMIN_UIDS = [
     "N6lVEy0lLbQua6my0Ktokym3AD22"
 ];
 
-
-/*
- * All common institutional data is stored under
- * this UID.
- */
-
 const DATA_OWNER_UID =
     "aQ3rE6XskFWueVUFNiR2Oj4GxAZ2";
 
-
 let isAdmin = false;
+
+
+/* =========================================================
+   REALTIME LISTENERS
+   ========================================================= */
 
 let meetingUnsubscribe = null;
 let eventUnsubscribe = null;
 let policyUnsubscribe = null;
 let problemUnsubscribe = null;
 
-let selectedProblemId = null;
 let toastTimer = null;
 
-
-/* =========================================================
-   AUTH ELEMENTS
-   ========================================================= */
-
-const authScreen =
-    document.getElementById("authScreen");
-
-const appScreen =
-    document.getElementById("app");
-
-const loginBox =
-    document.getElementById("loginBox");
-
-const signupBox =
-    document.getElementById("signupBox");
-
-const loginForm =
-    document.getElementById("loginForm");
-
-const signupForm =
-    document.getElementById("signupForm");
-
-const loginMessage =
-    document.getElementById("loginMessage");
-
-const signupMessage =
-    document.getElementById("signupMessage");
-
-const userEmail =
-    document.getElementById("userEmail");
-
-const userAvatar =
-    document.getElementById("userAvatar");
-
-const userRole =
-    document.getElementById("userRole");
-
-const pageTitle =
-    document.getElementById("pageTitle");
-
-
-/* =========================================================
-   FIRESTORE PATH
-   ========================================================= */
-
-function dataPath(type) {
-
-    return collection(
-        db,
-        "users",
-        DATA_OWNER_UID,
-        type
-    );
-
-}
+let selectedProblemId = null;
 
 
 /* =========================================================
@@ -152,245 +97,19 @@ const problemSearch =
 
 
 /* =========================================================
-   CREATE STUDENT PROBLEM EDIT MODAL
+   DATA PATH
    ========================================================= */
 
-function createStudentProblemModal() {
+function dataPath(type) {
 
-    if (
-        document.getElementById(
-            "studentProblemEditModal"
-        )
-    ) {
-        return;
-    }
+    return collection(
+        db,
+        "users",
+        DATA_OWNER_UID,
+        type
+    );
 
-    const modal =
-        document.createElement("div");
-
-    modal.id =
-        "studentProblemEditModal";
-
-    modal.className =
-        "modal hidden";
-
-    modal.innerHTML = `
-
-        <div class="modal-content">
-
-            <div class="modal-header">
-
-                <div>
-
-                    <h2>
-                        Edit Problem / Feedback
-                    </h2>
-
-                    <p>
-                        Update your problem details
-                        or send feedback to the administration.
-                    </p>
-
-                </div>
-
-                <button
-                    type="button"
-                    class="modal-close"
-                    data-close="studentProblemEditModal"
-                >
-                    ×
-                </button>
-
-            </div>
-
-
-            <form id="studentProblemEditForm">
-
-                <input
-                    type="hidden"
-                    id="studentEditProblemId"
-                >
-
-
-                <label>
-                    Problem Title
-                </label>
-
-                <input
-                    type="text"
-                    id="studentEditProblemTitle"
-                    required
-                >
-
-
-                <label>
-                    Category
-                </label>
-
-                <select
-                    id="studentEditProblemCategory"
-                    required
-                >
-
-                    <option value="">
-                        Select Category
-                    </option>
-
-                    <option value="Academic">
-                        Academic
-                    </option>
-
-                    <option value="Infrastructure">
-                        Infrastructure
-                    </option>
-
-                    <option value="Hostel">
-                        Hostel
-                    </option>
-
-                    <option value="Library">
-                        Library
-                    </option>
-
-                    <option value="Fees">
-                        Fees
-                    </option>
-
-                    <option value="Technical">
-                        Technical
-                    </option>
-
-                    <option value="Other">
-                        Other
-                    </option>
-
-                </select>
-
-
-                <label>
-                    Priority
-                </label>
-
-                <select
-                    id="studentEditProblemPriority"
-                    required
-                >
-
-                    <option value="Low">
-                        Low
-                    </option>
-
-                    <option value="Medium">
-                        Medium
-                    </option>
-
-                    <option value="High">
-                        High
-                    </option>
-
-                    <option value="Urgent">
-                        Urgent
-                    </option>
-
-                </select>
-
-
-                <label>
-                    Problem Description
-                </label>
-
-                <textarea
-                    id="studentEditProblemDescription"
-                    rows="5"
-                    required
-                ></textarea>
-
-
-                <label>
-                    Feedback
-                </label>
-
-                <textarea
-                    id="studentProblemFeedback"
-                    rows="5"
-                    placeholder="Enter feedback, additional information or response..."
-                ></textarea>
-
-
-                <div
-                    id="studentProblemAdminResponse"
-                    class="problem-response"
-                    style="display:none;"
-                ></div>
-
-
-                <div class="modal-actions">
-
-                    <button
-                        type="button"
-                        class="secondary-btn"
-                        data-close="studentProblemEditModal"
-                    >
-                        Cancel
-                    </button>
-
-                    <button
-                        type="submit"
-                        class="primary-btn"
-                    >
-                        Save Changes
-                    </button>
-
-                </div>
-
-            </form>
-
-        </div>
-
-    `;
-
-    document.body.appendChild(modal);
 }
-
-
-createStudentProblemModal();
-
-
-/* =========================================================
-   GENERIC MODAL CLOSE
-   ========================================================= */
-
-document.addEventListener(
-    "click",
-    event => {
-
-        const closeButton =
-            event.target.closest(
-                "[data-close]"
-            );
-
-        if (!closeButton) {
-            return;
-        }
-
-        const modalId =
-            closeButton.dataset.close;
-
-        const modal =
-            document.getElementById(
-                modalId
-            );
-
-        if (modal) {
-
-            modal.classList.add(
-                "hidden"
-            );
-
-        }
-
-    }
-);
 
 
 /* =========================================================
@@ -423,7 +142,42 @@ if (addProblemBtn) {
 
 
 /* =========================================================
-   ADD NEW PROBLEM
+   CLOSE MODALS
+   ========================================================= */
+
+document.addEventListener(
+    "click",
+    event => {
+
+        const closeButton =
+            event.target.closest(
+                "[data-close]"
+            );
+
+        if (!closeButton) return;
+
+        const modalId =
+            closeButton.dataset.close;
+
+        const modal =
+            document.getElementById(
+                modalId
+            );
+
+        if (modal) {
+
+            modal.classList.add(
+                "hidden"
+            );
+
+        }
+
+    }
+);
+
+
+/* =========================================================
+   ADD PROBLEM
    ========================================================= */
 
 if (problemForm) {
@@ -433,7 +187,6 @@ if (problemForm) {
         async event => {
 
             event.preventDefault();
-
 
             if (!auth.currentUser) {
 
@@ -445,7 +198,6 @@ if (problemForm) {
 
             }
 
-
             try {
 
                 const title =
@@ -453,32 +205,29 @@ if (problemForm) {
                         .getElementById(
                             "problemTitle"
                         )
-                        .value
+                        ?.value
                         .trim();
-
 
                 const category =
                     document
                         .getElementById(
                             "problemCategory"
                         )
-                        .value;
-
+                        ?.value;
 
                 const priority =
                     document
                         .getElementById(
                             "problemPriority"
                         )
-                        .value;
-
+                        ?.value;
 
                 const description =
                     document
                         .getElementById(
                             "problemDescription"
                         )
-                        .value
+                        ?.value
                         .trim();
 
 
@@ -505,7 +254,8 @@ if (problemForm) {
 
                         category: category,
 
-                        priority: priority,
+                        priority:
+                            priority || "Medium",
 
                         description: description,
 
@@ -513,34 +263,20 @@ if (problemForm) {
                             auth.currentUser.uid,
 
                         submittedByEmail:
-                            auth.currentUser.email || "",
+                            auth.currentUser.email || "Student",
 
-                        status:
-                            "Pending",
+                        status: "Pending",
 
-                        adminResponse:
-                            "",
-
-                        studentFeedback:
-                            "",
+                        adminResponse: "",
 
                         createdAt:
                             Date.now(),
 
-                        updatedAt:
-                            Date.now(),
+                        resolvedAt: null,
 
-                        feedbackUpdatedAt:
-                            null,
+                        respondedBy: "",
 
-                        respondedBy:
-                            "",
-
-                        respondedAt:
-                            null,
-
-                        resolvedAt:
-                            null
+                        respondedAt: null
 
                     }
                 );
@@ -603,79 +339,50 @@ function loadProblems() {
     }
 
 
-    if (!auth.currentUser) {
-        return;
-    }
+    try {
 
-
-    let q;
-
-
-    /*
-     * ADMIN:
-     * Load all problems.
-     */
-
-    if (isAdmin) {
-
-        q =
+        const q =
             query(
                 dataPath("problems")
             );
 
-    }
 
+        problemUnsubscribe =
+            onSnapshot(
+                q,
 
-    /*
-     * STUDENT:
-     * IMPORTANT:
-     * Student query must contain where()
-     * because Firestore rules do not filter queries.
-     */
+                snapshot => {
 
-    else {
+                    renderProblems(
+                        snapshot
+                    );
 
-        q =
-            query(
-                dataPath("problems"),
-                where(
-                    "submittedBy",
-                    "==",
-                    auth.currentUser.uid
-                )
+                },
+
+                error => {
+
+                    console.error(
+                        "PROBLEMS FIRESTORE ERROR:",
+                        error
+                    );
+
+                    showToast(
+                        "Problems error: " +
+                        error.message
+                    );
+
+                }
             );
 
-    }
 
+    } catch (error) {
 
-    problemUnsubscribe =
-        onSnapshot(
-
-            q,
-
-            snapshot => {
-
-                renderProblems(
-                    snapshot
-                );
-
-            },
-
-            error => {
-
-                console.error(
-                    "PROBLEM LOAD ERROR:",
-                    error
-                );
-
-                showToast(
-                    "Problems error: " +
-                    error.message
-                );
-
-            }
-
+        console.error(
+            "LOAD PROBLEMS ERROR:",
+            error
         );
+
+    }
 
 }
 
@@ -691,10 +398,11 @@ function renderProblems(snapshot) {
             "problemList"
         );
 
-    if (!list) {
-        return;
-    }
+    if (!list) return;
 
+
+    let total =
+        snapshot.size;
 
     let pending = 0;
     let review = 0;
@@ -741,51 +449,51 @@ function renderProblems(snapshot) {
     );
 
 
-    const totalCount =
+    const totalElement =
         document.getElementById(
             "problemTotalCount"
         );
 
-    const pendingCount =
+    const pendingElement =
         document.getElementById(
             "problemPendingCount"
         );
 
-    const reviewCount =
+    const reviewElement =
         document.getElementById(
             "problemReviewCount"
         );
 
-    const resolvedCount =
+    const resolvedElement =
         document.getElementById(
             "problemResolvedCount"
         );
 
 
-    if (totalCount) {
+    if (totalElement) {
 
-        totalCount.textContent =
-            snapshot.size;
+        totalElement.textContent =
+            total;
 
     }
 
-    if (pendingCount) {
+    if (pendingElement) {
 
-        pendingCount.textContent =
+        pendingElement.textContent =
             pending;
 
     }
 
-    if (reviewCount) {
+    if (reviewElement) {
 
-        reviewCount.textContent =
+        reviewElement.textContent =
             review;
 
     }
 
-    if (resolvedCount) {
+    if (resolvedElement) {
 
-        resolvedCount.textContent =
+        resolvedElement.textContent =
             resolved;
 
     }
@@ -794,7 +502,6 @@ function renderProblems(snapshot) {
     if (snapshot.empty) {
 
         list.innerHTML = `
-
             <div class="empty-state large-empty">
 
                 <div class="empty-icon">
@@ -806,12 +513,11 @@ function renderProblems(snapshot) {
                 </strong>
 
                 <span>
-                    Students can report college-related
+                    Students can report their college-related
                     problems here.
                 </span>
 
             </div>
-
         `;
 
         return;
@@ -870,134 +576,8 @@ function renderProblems(snapshot) {
                 String(
                     problem.priority ||
                     "Medium"
-                ).toLowerCase();
-
-
-            let studentActions = "";
-
-
-            if (
-                !isAdmin &&
-                auth.currentUser &&
-                problem.submittedBy ===
-                    auth.currentUser.uid
-            ) {
-
-                studentActions = `
-
-                    <div class="problem-actions">
-
-                        <button
-                            type="button"
-                            class="secondary-btn problem-edit-btn"
-                            data-id="${safeAttribute(problem.id)}"
-                        >
-                            Edit Problem / Feedback
-                        </button>
-
-                    </div>
-
-                `;
-
-            }
-
-
-            let adminActions = "";
-
-
-            if (isAdmin) {
-
-                adminActions = `
-
-                    <div class="problem-actions">
-
-                        <button
-                            type="button"
-                            class="secondary-btn problem-review-btn"
-                            data-id="${safeAttribute(problem.id)}"
-                        >
-                            Review / Respond
-                        </button>
-
-                        <button
-                            type="button"
-                            class="delete-btn problem-delete-btn"
-                            data-id="${safeAttribute(problem.id)}"
-                        >
-                            Delete
-                        </button>
-
-                    </div>
-
-                `;
-
-            }
-
-
-            let feedbackHTML = "";
-
-
-            if (
-                problem.studentFeedback
-            ) {
-
-                feedbackHTML = `
-
-                    <div class="problem-response">
-
-                        <div class="problem-response-title">
-                            Student Feedback
-                        </div>
-
-                        <p>
-                            ${safe(
-                                problem.studentFeedback
-                            )}
-                        </p>
-
-                        ${
-                            problem.feedbackUpdatedAt
-                            ? `
-                                <small>
-                                    Feedback submitted/updated
-                                </small>
-                            `
-                            : ""
-                        }
-
-                    </div>
-
-                `;
-
-            }
-
-
-            let responseHTML = "";
-
-
-            if (
-                problem.adminResponse
-            ) {
-
-                responseHTML = `
-
-                    <div class="problem-response">
-
-                        <div class="problem-response-title">
-                            Admin Response
-                        </div>
-
-                        <p>
-                            ${safe(
-                                problem.adminResponse
-                            )}
-                        </p>
-
-                    </div>
-
-                `;
-
-            }
+                )
+                    .toLowerCase();
 
 
             card.innerHTML = `
@@ -1031,7 +611,8 @@ function renderProblems(snapshot) {
 
                 <h3>
                     ${safe(
-                        problem.title
+                        problem.title ||
+                        "Untitled Problem"
                     )}
                 </h3>
 
@@ -1043,20 +624,35 @@ function renderProblems(snapshot) {
                 </p>
 
 
+                <div class="problem-user">
+
+                    <strong>
+                        Submitted by:
+                    </strong>
+
+                    ${safe(
+                        problem.submittedByEmail ||
+                        "Student"
+                    )}
+
+                </div>
+
+
                 ${
-                    isAdmin
+                    problem.adminResponse
                     ? `
 
-                        <div class="problem-user">
+                        <div class="problem-response">
 
-                            <strong>
-                                Submitted by:
-                            </strong>
+                            <div class="problem-response-title">
+                                Admin Response
+                            </div>
 
-                            ${safe(
-                                problem.submittedByEmail ||
-                                "Student"
-                            )}
+                            <p>
+                                ${safe(
+                                    problem.adminResponse
+                                )}
+                            </p>
 
                         </div>
 
@@ -1065,23 +661,42 @@ function renderProblems(snapshot) {
                 }
 
 
-                ${responseHTML}
+                ${
+                    isAdmin
+                    ? `
 
+                        <div class="problem-actions">
 
-                ${feedbackHTML}
+                            <button
+                                type="button"
+                                class="secondary-btn problem-review-btn"
+                                data-id="${safeAttribute(
+                                    problem.id
+                                )}"
+                            >
+                                Review / Respond
+                            </button>
 
+                            <button
+                                type="button"
+                                class="delete-btn problem-delete-btn"
+                                data-id="${safeAttribute(
+                                    problem.id
+                                )}"
+                            >
+                                Delete
+                            </button>
 
-                ${studentActions}
+                        </div>
 
-
-                ${adminActions}
+                    `
+                    : ""
+                }
 
             `;
 
 
-            list.appendChild(
-                card
-            );
+            list.appendChild(card);
 
         }
     );
@@ -1096,29 +711,19 @@ function renderProblems(snapshot) {
    PROBLEM STATUS CLASS
    ========================================================= */
 
-function getProblemStatusClass(
-    status
-) {
+function getProblemStatusClass(status) {
 
-    if (
-        status ===
-        "Resolved"
-    ) {
+    if (status === "Resolved") {
 
         return "resolved";
 
     }
 
-
-    if (
-        status ===
-        "Under Review"
-    ) {
+    if (status === "Under Review") {
 
         return "review";
 
     }
-
 
     return "pending";
 
@@ -1126,30 +731,10 @@ function getProblemStatusClass(
 
 
 /* =========================================================
-   ATTACH PROBLEM BUTTONS
+   PROBLEM BUTTONS
    ========================================================= */
 
 function attachProblemButtons() {
-
-    document
-        .querySelectorAll(
-            ".problem-edit-btn"
-        )
-        .forEach(
-            button => {
-
-                button.onclick =
-                    () => {
-
-                        openStudentProblemEdit(
-                            button.dataset.id
-                        );
-
-                    };
-
-            }
-        );
-
 
     document
         .querySelectorAll(
@@ -1158,14 +743,13 @@ function attachProblemButtons() {
         .forEach(
             button => {
 
-                button.onclick =
-                    () => {
+                button.onclick = () => {
 
-                        openProblemResponse(
-                            button.dataset.id
-                        );
+                    openProblemResponse(
+                        button.dataset.id
+                    );
 
-                    };
+                };
 
             }
         );
@@ -1178,14 +762,13 @@ function attachProblemButtons() {
         .forEach(
             button => {
 
-                button.onclick =
-                    () => {
+                button.onclick = async () => {
 
-                        deleteProblem(
-                            button.dataset.id
-                        );
+                    await deleteProblem(
+                        button.dataset.id
+                    );
 
-                    };
+                };
 
             }
         );
@@ -1194,474 +777,7 @@ function attachProblemButtons() {
 
 
 /* =========================================================
-   OPEN STUDENT EDIT MODAL
-   ========================================================= */
-
-async function openStudentProblemEdit(
-    problemId
-) {
-
-    if (!auth.currentUser) {
-
-        showToast(
-            "Please login first."
-        );
-
-        return;
-
-    }
-
-
-    try {
-
-        /*
-         * Student is querying only their own problems.
-         */
-
-        const q =
-            query(
-                dataPath("problems"),
-                where(
-                    "submittedBy",
-                    "==",
-                    auth.currentUser.uid
-                )
-            );
-
-
-        const snapshot =
-            await getDocs(q);
-
-
-        let problemData = null;
-
-
-        snapshot.forEach(
-            item => {
-
-                if (
-                    item.id ===
-                    problemId
-                ) {
-
-                    problemData =
-                        item.data();
-
-                }
-
-            }
-        );
-
-
-        if (!problemData) {
-
-            showToast(
-                "Problem not found or access denied."
-            );
-
-            return;
-
-        }
-
-
-        if (
-            problemData.submittedBy !==
-            auth.currentUser.uid
-        ) {
-
-            showToast(
-                "You can only edit your own problem."
-            );
-
-            return;
-
-        }
-
-
-        document
-            .getElementById(
-                "studentEditProblemId"
-            )
-            .value =
-                problemId;
-
-
-        document
-            .getElementById(
-                "studentEditProblemTitle"
-            )
-            .value =
-                problemData.title || "";
-
-
-        document
-            .getElementById(
-                "studentEditProblemCategory"
-            )
-            .value =
-                problemData.category || "";
-
-
-        document
-            .getElementById(
-                "studentEditProblemPriority"
-            )
-            .value =
-                problemData.priority ||
-                "Medium";
-
-
-        document
-            .getElementById(
-                "studentEditProblemDescription"
-            )
-            .value =
-                problemData.description || "";
-
-
-        document
-            .getElementById(
-                "studentProblemFeedback"
-            )
-            .value =
-                problemData.studentFeedback || "";
-
-
-        const responseBox =
-            document.getElementById(
-                "studentProblemAdminResponse"
-            );
-
-
-        if (responseBox) {
-
-            if (
-                problemData.adminResponse
-            ) {
-
-                responseBox.style.display =
-                    "block";
-
-                responseBox.innerHTML = `
-
-                    <div class="problem-response-title">
-                        Admin Response
-                    </div>
-
-                    <p>
-                        ${safe(
-                            problemData.adminResponse
-                        )}
-                    </p>
-
-                    <p>
-
-                        <strong>
-                            Status:
-                        </strong>
-
-                        ${safe(
-                            problemData.status ||
-                            "Pending"
-                        )}
-
-                    </p>
-
-                `;
-
-            } else {
-
-                responseBox.style.display =
-                    "none";
-
-                responseBox.innerHTML =
-                    "";
-
-            }
-
-        }
-
-
-        const modal =
-            document.getElementById(
-                "studentProblemEditModal"
-            );
-
-
-        if (modal) {
-
-            modal.classList.remove(
-                "hidden"
-            );
-
-        }
-
-
-    } catch (error) {
-
-        console.error(
-            "OPEN STUDENT PROBLEM ERROR:",
-            error
-        );
-
-        showToast(
-            "Could not open problem: " +
-            error.message
-        );
-
-    }
-
-}
-
-
-/* =========================================================
-   STUDENT EDIT + FEEDBACK FORM
-   ========================================================= */
-
-const studentProblemEditForm =
-    document.getElementById(
-        "studentProblemEditForm"
-    );
-
-
-if (studentProblemEditForm) {
-
-    studentProblemEditForm.addEventListener(
-        "submit",
-        async event => {
-
-            event.preventDefault();
-
-
-            if (!auth.currentUser) {
-
-                showToast(
-                    "Please login first."
-                );
-
-                return;
-
-            }
-
-
-            const problemId =
-                document
-                    .getElementById(
-                        "studentEditProblemId"
-                    )
-                    .value;
-
-
-            if (!problemId) {
-
-                showToast(
-                    "Problem not selected."
-                );
-
-                return;
-
-            }
-
-
-            try {
-
-                const problemRef =
-                    doc(
-                        db,
-                        "users",
-                        DATA_OWNER_UID,
-                        "problems",
-                        problemId
-                    );
-
-
-                /*
-                 * Read the current document first.
-                 * This verifies ownership and allows us
-                 * to preserve existing feedback timestamp.
-                 */
-
-                const currentSnapshot =
-                    await getDoc(
-                        problemRef
-                    );
-
-
-                if (
-                    !currentSnapshot.exists()
-                ) {
-
-                    showToast(
-                        "Problem no longer exists."
-                    );
-
-                    return;
-
-                }
-
-
-                const currentData =
-                    currentSnapshot.data();
-
-
-                if (
-                    currentData.submittedBy !==
-                    auth.currentUser.uid
-                ) {
-
-                    showToast(
-                        "You can only edit your own problem."
-                    );
-
-                    return;
-
-                }
-
-
-                const title =
-                    document
-                        .getElementById(
-                            "studentEditProblemTitle"
-                        )
-                        .value
-                        .trim();
-
-
-                const category =
-                    document
-                        .getElementById(
-                            "studentEditProblemCategory"
-                        )
-                        .value;
-
-
-                const priority =
-                    document
-                        .getElementById(
-                            "studentEditProblemPriority"
-                        )
-                        .value;
-
-
-                const description =
-                    document
-                        .getElementById(
-                            "studentEditProblemDescription"
-                        )
-                        .value
-                        .trim();
-
-
-                const feedback =
-                    document
-                        .getElementById(
-                            "studentProblemFeedback"
-                        )
-                        .value
-                        .trim();
-
-
-                if (
-                    !title ||
-                    !category ||
-                    !description
-                ) {
-
-                    showToast(
-                        "Please fill all required fields."
-                    );
-
-                    return;
-
-                }
-
-
-                const oldFeedback =
-                    currentData.studentFeedback ||
-                    "";
-
-
-                const feedbackChanged =
-                    oldFeedback !==
-                    feedback;
-
-
-                await updateDoc(
-                    problemRef,
-                    {
-
-                        title:
-                            title,
-
-                        category:
-                            category,
-
-                        priority:
-                            priority,
-
-                        description:
-                            description,
-
-                        studentFeedback:
-                            feedback,
-
-                        updatedAt:
-                            Date.now(),
-
-                        feedbackUpdatedAt:
-                            feedbackChanged
-                            ? Date.now()
-                            : (
-                                currentData.feedbackUpdatedAt ||
-                                null
-                            )
-
-                    }
-                );
-
-
-                const modal =
-                    document.getElementById(
-                        "studentProblemEditModal"
-                    );
-
-
-                if (modal) {
-
-                    modal.classList.add(
-                        "hidden"
-                    );
-
-                }
-
-
-                showToast(
-                    "Problem and feedback updated successfully."
-                );
-
-
-            } catch (error) {
-
-                console.error(
-                    "STUDENT UPDATE ERROR:",
-                    error
-                );
-
-                showToast(
-                    "Could not update problem: " +
-                    error.message
-                );
-
-            }
-
-        }
-    );
-
-}
-
-
-/* =========================================================
-   OPEN ADMIN RESPONSE MODAL
+   OPEN PROBLEM RESPONSE
    ========================================================= */
 
 async function openProblemResponse(
@@ -1685,23 +801,43 @@ async function openProblemResponse(
 
     try {
 
-        const problemRef =
-            doc(
-                db,
-                "users",
-                DATA_OWNER_UID,
-                "problems",
-                problemId
+        const problemQuery =
+            query(
+                dataPath("problems")
             );
 
 
         const snapshot =
-            await getDoc(
-                problemRef
+            await getDocs(
+                problemQuery
             );
 
 
-        if (!snapshot.exists()) {
+        let problemData =
+            null;
+
+
+        snapshot.forEach(
+            item => {
+
+                if (
+                    item.id ===
+                    problemId
+                ) {
+
+                    problemData =
+                        item.data();
+
+                }
+
+            }
+        );
+
+
+        if (!problemData) {
+
+            selectedProblemId =
+                null;
 
             showToast(
                 "Problem not found."
@@ -1710,10 +846,6 @@ async function openProblemResponse(
             return;
 
         }
-
-
-        const problemData =
-            snapshot.data();
 
 
         const details =
@@ -1732,88 +864,33 @@ async function openProblemResponse(
                     )}
                 </h3>
 
-
                 <p>
-
-                    <strong>
-                        Category:
-                    </strong>
-
+                    <strong>Category:</strong>
                     ${safe(
                         problemData.category
                     )}
-
                 </p>
 
-
                 <p>
-
-                    <strong>
-                        Priority:
-                    </strong>
-
+                    <strong>Priority:</strong>
                     ${safe(
                         problemData.priority
                     )}
-
                 </p>
 
-
                 <p>
-
-                    <strong>
-                        Student:
-                    </strong>
-
+                    <strong>Student:</strong>
                     ${safe(
                         problemData.submittedByEmail
                     )}
-
                 </p>
 
-
                 <p>
-
-                    <strong>
-                        Problem:
-                    </strong>
-
-                    <br>
-
+                    <strong>Problem:</strong><br>
                     ${safe(
                         problemData.description
                     )}
-
                 </p>
-
-
-                <div class="problem-response">
-
-                    <div class="problem-response-title">
-                        Student Feedback
-                    </div>
-
-                    ${
-                        problemData.studentFeedback
-                        ? `
-
-                            <p>
-                                ${safe(
-                                    problemData.studentFeedback
-                                )}
-                            </p>
-
-                        `
-                        : `
-
-                            <p>
-                                No feedback submitted yet.
-                            </p>
-
-                        `
-                    }
-
-                </div>
 
             `;
 
@@ -1826,6 +903,12 @@ async function openProblemResponse(
             );
 
 
+        const responseElement =
+            document.getElementById(
+                "adminResponse"
+            );
+
+
         if (statusElement) {
 
             statusElement.value =
@@ -1833,12 +916,6 @@ async function openProblemResponse(
                 "Pending";
 
         }
-
-
-        const responseElement =
-            document.getElementById(
-                "adminResponse"
-            );
 
 
         if (responseElement) {
@@ -1868,12 +945,14 @@ async function openProblemResponse(
     } catch (error) {
 
         console.error(
-            "OPEN ADMIN RESPONSE ERROR:",
+            "OPEN PROBLEM ERROR:",
             error
         );
 
+        selectedProblemId =
+            null;
+
         showToast(
-            "Could not open problem: " +
             error.message
         );
 
@@ -1883,7 +962,7 @@ async function openProblemResponse(
 
 
 /* =========================================================
-   ADMIN RESPONSE / RESOLVE
+   ADMIN RESPONSE / RESOLUTION
    ========================================================= */
 
 if (problemResponseForm) {
@@ -1919,21 +998,28 @@ if (problemResponseForm) {
 
             try {
 
+                const statusElement =
+                    document.getElementById(
+                        "problemStatus"
+                    );
+
+
+                const responseElement =
+                    document.getElementById(
+                        "adminResponse"
+                    );
+
+
                 const status =
-                    document
-                        .getElementById(
-                            "problemStatus"
-                        )
-                        .value;
+                    statusElement
+                        ? statusElement.value
+                        : "Under Review";
 
 
                 const response =
-                    document
-                        .getElementById(
-                            "adminResponse"
-                        )
-                        .value
-                        .trim();
+                    responseElement
+                        ? responseElement.value.trim()
+                        : "";
 
 
                 if (!response) {
@@ -1969,17 +1055,25 @@ if (problemResponseForm) {
                         auth.currentUser.uid,
 
                     respondedAt:
-                        Date.now(),
-
-                    updatedAt:
-                        Date.now(),
-
-                    resolvedAt:
-                        status === "Resolved"
-                        ? Date.now()
-                        : null
+                        Date.now()
 
                 };
+
+
+                if (
+                    status ===
+                    "Resolved"
+                ) {
+
+                    updateData.resolvedAt =
+                        Date.now();
+
+                } else {
+
+                    updateData.resolvedAt =
+                        null;
+
+                }
 
 
                 await updateDoc(
@@ -2009,15 +1103,15 @@ if (problemResponseForm) {
 
                 showToast(
                     status === "Resolved"
-                    ? "Problem resolved successfully."
-                    : "Problem response updated successfully."
+                        ? "Problem resolved successfully."
+                        : "Problem response updated."
                 );
 
 
             } catch (error) {
 
                 console.error(
-                    "ADMIN UPDATE ERROR:",
+                    "UPDATE PROBLEM ERROR:",
                     error
                 );
 
@@ -2053,15 +1147,14 @@ async function deleteProblem(
     }
 
 
-    const confirmed =
+    const confirmDelete =
         confirm(
-            "Are you sure you want to delete this problem?"
+            "Delete this problem?"
         );
 
 
-    if (!confirmed) {
+    if (!confirmDelete)
         return;
-    }
 
 
     try {
@@ -2100,7 +1193,7 @@ async function deleteProblem(
 
 
 /* =========================================================
-   PROBLEM SEARCH
+   SEARCH PROBLEMS
    ========================================================= */
 
 if (problemSearch) {
@@ -2109,7 +1202,7 @@ if (problemSearch) {
         "input",
         () => {
 
-            const searchText =
+            const value =
                 problemSearch.value
                     .toLowerCase()
                     .trim();
@@ -2128,11 +1221,9 @@ if (problemSearch) {
 
 
                         card.style.display =
-                            text.includes(
-                                searchText
-                            )
-                            ? ""
-                            : "none";
+                            text.includes(value)
+                                ? ""
+                                : "none";
 
                     }
                 );
@@ -2141,6 +1232,71 @@ if (problemSearch) {
     );
 
 }
+
+
+/* =========================================================
+   AUTH ELEMENTS
+   ========================================================= */
+
+const authScreen =
+    document.getElementById(
+        "authScreen"
+    );
+
+const appScreen =
+    document.getElementById(
+        "app"
+    );
+
+const loginBox =
+    document.getElementById(
+        "loginBox"
+    );
+
+const signupBox =
+    document.getElementById(
+        "signupBox"
+    );
+
+const loginForm =
+    document.getElementById(
+        "loginForm"
+    );
+
+const signupForm =
+    document.getElementById(
+        "signupForm"
+    );
+
+const loginMessage =
+    document.getElementById(
+        "loginMessage"
+    );
+
+const signupMessage =
+    document.getElementById(
+        "signupMessage"
+    );
+
+const userEmail =
+    document.getElementById(
+        "userEmail"
+    );
+
+const userAvatar =
+    document.getElementById(
+        "userAvatar"
+    );
+
+const userRole =
+    document.getElementById(
+        "userRole"
+    );
+
+const pageTitle =
+    document.getElementById(
+        "pageTitle"
+    );
 
 
 /* =========================================================
@@ -2160,70 +1316,44 @@ const showLoginButton =
 
 if (showSignupButton) {
 
-    showSignupButton.onclick =
-        () => {
+    showSignupButton.onclick = () => {
 
-            if (loginBox) {
+        if (loginBox)
+            loginBox.classList.add(
+                "hidden"
+            );
 
-                loginBox.classList.add(
-                    "hidden"
-                );
+        if (signupBox)
+            signupBox.classList.remove(
+                "hidden"
+            );
 
-            }
+        if (loginMessage)
+            loginMessage.textContent = "";
 
-
-            if (signupBox) {
-
-                signupBox.classList.remove(
-                    "hidden"
-                );
-
-            }
-
-
-            if (loginMessage) {
-
-                loginMessage.textContent =
-                    "";
-
-            }
-
-        };
+    };
 
 }
 
 
 if (showLoginButton) {
 
-    showLoginButton.onclick =
-        () => {
+    showLoginButton.onclick = () => {
 
-            if (signupBox) {
+        if (signupBox)
+            signupBox.classList.add(
+                "hidden"
+            );
 
-                signupBox.classList.add(
-                    "hidden"
-                );
+        if (loginBox)
+            loginBox.classList.remove(
+                "hidden"
+            );
 
-            }
+        if (signupMessage)
+            signupMessage.textContent = "";
 
-
-            if (loginBox) {
-
-                loginBox.classList.remove(
-                    "hidden"
-                );
-
-            }
-
-
-            if (signupMessage) {
-
-                signupMessage.textContent =
-                    "";
-
-            }
-
-        };
+    };
 
 }
 
@@ -2236,9 +1366,9 @@ if (signupForm) {
 
     signupForm.addEventListener(
         "submit",
-        async event => {
+        async e => {
 
-            event.preventDefault();
+            e.preventDefault();
 
 
             const email =
@@ -2246,7 +1376,7 @@ if (signupForm) {
                     .getElementById(
                         "signupEmail"
                     )
-                    .value
+                    ?.value
                     .trim();
 
 
@@ -2255,7 +1385,21 @@ if (signupForm) {
                     .getElementById(
                         "signupPassword"
                     )
-                    .value;
+                    ?.value;
+
+
+            if (!email || !password) {
+
+                if (signupMessage) {
+
+                    signupMessage.textContent =
+                        "Please enter email and password.";
+
+                }
+
+                return;
+
+            }
 
 
             try {
@@ -2283,9 +1427,7 @@ if (signupForm) {
                 if (signupMessage) {
 
                     signupMessage.textContent =
-                        getErrorMessage(
-                            error
-                        );
+                        getError(error);
 
                 }
 
@@ -2305,9 +1447,9 @@ if (loginForm) {
 
     loginForm.addEventListener(
         "submit",
-        async event => {
+        async e => {
 
-            event.preventDefault();
+            e.preventDefault();
 
 
             const email =
@@ -2315,7 +1457,7 @@ if (loginForm) {
                     .getElementById(
                         "loginEmail"
                     )
-                    .value
+                    ?.value
                     .trim();
 
 
@@ -2324,7 +1466,21 @@ if (loginForm) {
                     .getElementById(
                         "loginPassword"
                     )
-                    .value;
+                    ?.value;
+
+
+            if (!email || !password) {
+
+                if (loginMessage) {
+
+                    loginMessage.textContent =
+                        "Please enter email and password.";
+
+                }
+
+                return;
+
+            }
 
 
             try {
@@ -2349,9 +1505,7 @@ if (loginForm) {
                 if (loginMessage) {
 
                     loginMessage.textContent =
-                        getErrorMessage(
-                            error
-                        );
+                        getError(error);
 
                 }
 
@@ -2373,8 +1527,7 @@ onAuthStateChanged(
 
         if (!user) {
 
-            isAdmin =
-                false;
+            isAdmin = false;
 
 
             if (authScreen) {
@@ -2395,9 +1548,9 @@ onAuthStateChanged(
             }
 
 
-            stopListeners();
-
             updateAdminUI();
+
+            stopListeners();
 
             return;
 
@@ -2425,8 +1578,7 @@ onAuthStateChanged(
         if (userEmail) {
 
             userEmail.textContent =
-                user.email ||
-                "User";
+                user.email || "User";
 
         }
 
@@ -2434,10 +1586,7 @@ onAuthStateChanged(
         if (userAvatar) {
 
             userAvatar.textContent =
-                (
-                    user.email ||
-                    "U"
-                )
+                (user.email || "U")
                     .charAt(0)
                     .toUpperCase();
 
@@ -2454,8 +1603,8 @@ onAuthStateChanged(
 
             userRole.textContent =
                 isAdmin
-                ? "ADMIN"
-                : "USER";
+                    ? "ADMIN"
+                    : "USER";
 
         }
 
@@ -2467,6 +1616,8 @@ onAuthStateChanged(
             "dashboard"
         );
 
+
+        /* IMPORTANT */
 
         loadMeetings();
         loadEvents();
@@ -2489,24 +1640,23 @@ const logoutBtn =
 
 if (logoutBtn) {
 
-    logoutBtn.onclick =
-        async () => {
+    logoutBtn.onclick = async () => {
 
-            try {
+        try {
 
-                await signOut(
-                    auth
-                );
+            await signOut(
+                auth
+            );
 
-            } catch (error) {
+        } catch (error) {
 
-                showToast(
-                    error.message
-                );
+            showToast(
+                error.message
+            );
 
-            }
+        }
 
-        };
+    };
 
 }
 
@@ -2517,7 +1667,7 @@ if (logoutBtn) {
 
 function updateAdminUI() {
 
-    const adminButtons = [
+    const buttons = [
 
         "addMeetingBtn",
         "dashboardMeetingBtn",
@@ -2527,7 +1677,7 @@ function updateAdminUI() {
     ];
 
 
-    adminButtons.forEach(
+    buttons.forEach(
         id => {
 
             const button =
@@ -2536,15 +1686,14 @@ function updateAdminUI() {
                 );
 
 
-            if (!button) {
+            if (!button)
                 return;
-            }
 
 
             button.style.display =
                 isAdmin
-                ? ""
-                : "none";
+                    ? ""
+                    : "none";
 
         }
     );
@@ -2662,7 +1811,7 @@ function showPage(page) {
             "Policies & Rules",
 
         problems:
-            "Problems & Feedback"
+            "Student Problems & Feedback"
 
     };
 
@@ -2679,7 +1828,7 @@ function showPage(page) {
 
 
 /* =========================================================
-   MODAL FUNCTIONS
+   MODALS
    ========================================================= */
 
 function openModal(id) {
@@ -2701,13 +1850,13 @@ function openModal(id) {
         );
 
 
-    if (modal) {
+    if (!modal)
+        return;
 
-        modal.classList.remove(
-            "hidden"
-        );
 
-    }
+    modal.classList.remove(
+        "hidden"
+    );
 
 }
 
@@ -2720,19 +1869,45 @@ function closeModal(id) {
         );
 
 
-    if (modal) {
+    if (!modal)
+        return;
 
-        modal.classList.add(
-            "hidden"
-        );
 
-    }
+    modal.classList.add(
+        "hidden"
+    );
 
 }
 
 
 /* =========================================================
-   ADD MEETING BUTTON
+   MODAL CLOSE BUTTONS
+   ========================================================= */
+
+document
+    .querySelectorAll(
+        "[data-close]"
+    )
+    .forEach(
+        button => {
+
+            button.addEventListener(
+                "click",
+                () => {
+
+                    closeModal(
+                        button.dataset.close
+                    );
+
+                }
+            );
+
+        }
+    );
+
+
+/* =========================================================
+   OPEN BUTTONS
    ========================================================= */
 
 const addMeetingBtn =
@@ -2743,21 +1918,16 @@ const addMeetingBtn =
 
 if (addMeetingBtn) {
 
-    addMeetingBtn.onclick =
-        () => {
+    addMeetingBtn.onclick = () => {
 
-            openModal(
-                "meetingModal"
-            );
+        openModal(
+            "meetingModal"
+        );
 
-        };
+    };
 
 }
 
-
-/* =========================================================
-   DASHBOARD MEETING BUTTON
-   ========================================================= */
 
 const dashboardMeetingBtn =
     document.getElementById(
@@ -2767,21 +1937,16 @@ const dashboardMeetingBtn =
 
 if (dashboardMeetingBtn) {
 
-    dashboardMeetingBtn.onclick =
-        () => {
+    dashboardMeetingBtn.onclick = () => {
 
-            openModal(
-                "meetingModal"
-            );
+        openModal(
+            "meetingModal"
+        );
 
-        };
+    };
 
 }
 
-
-/* =========================================================
-   ADD EVENT BUTTON
-   ========================================================= */
 
 const addEventBtn =
     document.getElementById(
@@ -2791,21 +1956,16 @@ const addEventBtn =
 
 if (addEventBtn) {
 
-    addEventBtn.onclick =
-        () => {
+    addEventBtn.onclick = () => {
 
-            openModal(
-                "eventModal"
-            );
+        openModal(
+            "eventModal"
+        );
 
-        };
+    };
 
 }
 
-
-/* =========================================================
-   ADD POLICY BUTTON
-   ========================================================= */
 
 const addPolicyBtn =
     document.getElementById(
@@ -2815,14 +1975,13 @@ const addPolicyBtn =
 
 if (addPolicyBtn) {
 
-    addPolicyBtn.onclick =
-        () => {
+    addPolicyBtn.onclick = () => {
 
-            openModal(
-                "policyModal"
-            );
+        openModal(
+            "policyModal"
+        );
 
-        };
+    };
 
 }
 
@@ -2841,14 +2000,13 @@ function attachEmptyStateButtons() {
 
     if (emptyMeetingBtn) {
 
-        emptyMeetingBtn.onclick =
-            () => {
+        emptyMeetingBtn.onclick = () => {
 
-                openModal(
-                    "meetingModal"
-                );
+            openModal(
+                "meetingModal"
+            );
 
-            };
+        };
 
     }
 
@@ -2861,14 +2019,13 @@ function attachEmptyStateButtons() {
 
     if (emptyEventBtn) {
 
-        emptyEventBtn.onclick =
-            () => {
+        emptyEventBtn.onclick = () => {
 
-                openModal(
-                    "eventModal"
-                );
+            openModal(
+                "eventModal"
+            );
 
-            };
+        };
 
     }
 
@@ -2881,14 +2038,13 @@ function attachEmptyStateButtons() {
 
     if (emptyPolicyBtn) {
 
-        emptyPolicyBtn.onclick =
-            () => {
+        emptyPolicyBtn.onclick = () => {
 
-                openModal(
-                    "policyModal"
-                );
+            openModal(
+                "policyModal"
+            );
 
-            };
+        };
 
     }
 
@@ -2899,7 +2055,7 @@ attachEmptyStateButtons();
 
 
 /* =========================================================
-   MEETING FORM
+   ADD MEETING
    ========================================================= */
 
 const meetingForm =
@@ -2912,9 +2068,9 @@ if (meetingForm) {
 
     meetingForm.addEventListener(
         "submit",
-        async event => {
+        async e => {
 
-            event.preventDefault();
+            e.preventDefault();
 
 
             if (!isAdmin) {
@@ -3015,6 +2171,7 @@ if (meetingForm) {
 
                 meetingForm.reset();
 
+
                 closeModal(
                     "meetingModal"
                 );
@@ -3026,10 +2183,6 @@ if (meetingForm) {
 
 
             } catch (error) {
-
-                console.error(
-                    error
-                );
 
                 showToast(
                     error.message
@@ -3053,8 +2206,7 @@ function loadMeetings() {
 
         meetingUnsubscribe();
 
-        meetingUnsubscribe =
-            null;
+        meetingUnsubscribe = null;
 
     }
 
@@ -3086,26 +2238,22 @@ function loadMeetings() {
                     );
 
 
-                if (!list) {
+                if (!list || !recent)
                     return;
-                }
 
 
-                list.innerHTML =
-                    "";
-
-
-                if (recent) {
-
-                    recent.innerHTML =
-                        "";
-
-                }
+                list.innerHTML = "";
+                recent.innerHTML = "";
 
 
                 const meetingCount =
                     document.getElementById(
                         "meetingCount"
+                    );
+
+                const actionCount =
+                    document.getElementById(
+                        "actionCount"
                     );
 
 
@@ -3117,10 +2265,13 @@ function loadMeetings() {
                 }
 
 
+                let pendingActions = 0;
+                let recentIndex = 0;
+
+
                 if (snapshot.empty) {
 
                     list.innerHTML = `
-
                         <div class="empty-state large-empty">
 
                             <div class="empty-icon">
@@ -3133,7 +2284,7 @@ function loadMeetings() {
 
                             <span>
                                 Add a meeting to start building
-                                institutional history.
+                                a searchable history of institutional decisions.
                             </span>
 
                             <button
@@ -3145,8 +2296,35 @@ function loadMeetings() {
                             </button>
 
                         </div>
-
                     `;
+
+
+                    recent.innerHTML = `
+                        <div class="empty-state">
+
+                            <div class="empty-icon">
+                                ▣
+                            </div>
+
+                            <strong>
+                                No meetings yet
+                            </strong>
+
+                            <span>
+                                Create the first meeting record
+                                to build your institutional memory.
+                            </span>
+
+                        </div>
+                    `;
+
+
+                    if (actionCount) {
+
+                        actionCount.textContent =
+                            "0";
+
+                    }
 
 
                     attachEmptyStateButtons();
@@ -3156,14 +2334,22 @@ function loadMeetings() {
                 }
 
 
-                let recentIndex = 0;
-
-
                 snapshot.forEach(
                     item => {
 
                         const meeting =
                             item.data();
+
+
+                        if (
+                            meeting.action &&
+                            meeting.status !==
+                                "Completed"
+                        ) {
+
+                            pendingActions++;
+
+                        }
 
 
                         list.innerHTML += `
@@ -3203,8 +2389,7 @@ function loadMeetings() {
                                 <p>
                                     <strong>
                                         Agenda:
-                                    </strong>
-                                    <br>
+                                    </strong><br>
 
                                     ${safe(
                                         meeting.agenda
@@ -3214,8 +2399,7 @@ function loadMeetings() {
                                 <p>
                                     <strong>
                                         Minutes / Decision:
-                                    </strong>
-                                    <br>
+                                    </strong><br>
 
                                     ${safe(
                                         meeting.minutes ||
@@ -3264,7 +2448,9 @@ function loadMeetings() {
 
                                         <button
                                             class="delete-btn"
-                                            data-id="${safeAttribute(item.id)}"
+                                            data-id="${safeAttribute(
+                                                item.id
+                                            )}"
                                             type="button"
                                         >
                                             Delete
@@ -3280,7 +2466,6 @@ function loadMeetings() {
 
 
                         if (
-                            recent &&
                             recentIndex < 5
                         ) {
 
@@ -3327,6 +2512,14 @@ function loadMeetings() {
                 );
 
 
+                if (actionCount) {
+
+                    actionCount.textContent =
+                        pendingActions;
+
+                }
+
+
                 attachDeleteButtons(
                     list,
                     "meetings"
@@ -3337,6 +2530,7 @@ function loadMeetings() {
             error => {
 
                 console.error(
+                    "MEETING ERROR:",
                     error
                 );
 
@@ -3351,7 +2545,7 @@ function loadMeetings() {
 
 
 /* =========================================================
-   EVENT FORM
+   ADD EVENT
    ========================================================= */
 
 const eventForm =
@@ -3364,9 +2558,9 @@ if (eventForm) {
 
     eventForm.addEventListener(
         "submit",
-        async event => {
+        async e => {
 
-            event.preventDefault();
+            e.preventDefault();
 
 
             if (!isAdmin) {
@@ -3445,6 +2639,7 @@ if (eventForm) {
 
                 eventForm.reset();
 
+
                 closeModal(
                     "eventModal"
                 );
@@ -3479,8 +2674,7 @@ function loadEvents() {
 
         eventUnsubscribe();
 
-        eventUnsubscribe =
-            null;
+        eventUnsubscribe = null;
 
     }
 
@@ -3507,13 +2701,11 @@ function loadEvents() {
                     );
 
 
-                if (!list) {
+                if (!list)
                     return;
-                }
 
 
-                list.innerHTML =
-                    "";
+                list.innerHTML = "";
 
 
                 const eventCount =
@@ -3572,7 +2764,7 @@ function loadEvents() {
                 snapshot.forEach(
                     item => {
 
-                        const eventData =
+                        const event =
                             item.data();
 
 
@@ -3582,33 +2774,33 @@ function loadEvents() {
 
                                 <h3>
                                     ${safe(
-                                        eventData.title
+                                        event.title
                                     )}
                                 </h3>
 
                                 <p>
                                     📅
                                     ${safe(
-                                        eventData.date
+                                        event.date
                                     )}
                                 </p>
 
                                 <p>
                                     📍
                                     ${safe(
-                                        eventData.location
+                                        event.location
                                     )}
                                 </p>
 
                                 <p>
                                     ${safe(
-                                        eventData.description
+                                        event.description
                                     )}
                                 </p>
 
 
                                 ${
-                                    eventData.speaker
+                                    event.speaker
                                     ? `
 
                                         <p>
@@ -3618,7 +2810,7 @@ function loadEvents() {
                                             </strong>
 
                                             ${safe(
-                                                eventData.speaker
+                                                event.speaker
                                             )}
                                         </p>
 
@@ -3628,19 +2820,18 @@ function loadEvents() {
 
 
                                 ${
-                                    eventData.archiveLink &&
+                                    event.archiveLink &&
                                     isSafeUrl(
-                                        eventData.archiveLink
+                                        event.archiveLink
                                     )
                                     ? `
 
                                         <p>
-
                                             🔗
 
                                             <a
                                                 href="${safeAttribute(
-                                                    eventData.archiveLink
+                                                    event.archiveLink
                                                 )}"
                                                 target="_blank"
                                                 rel="noopener noreferrer"
@@ -3661,7 +2852,9 @@ function loadEvents() {
 
                                         <button
                                             class="delete-btn"
-                                            data-id="${safeAttribute(item.id)}"
+                                            data-id="${safeAttribute(
+                                                item.id
+                                            )}"
                                             type="button"
                                         >
                                             Delete
@@ -3688,6 +2881,11 @@ function loadEvents() {
 
             error => {
 
+                console.error(
+                    "EVENT ERROR:",
+                    error
+                );
+
                 showToast(
                     error.message
                 );
@@ -3699,7 +2897,7 @@ function loadEvents() {
 
 
 /* =========================================================
-   POLICY FORM
+   ADD POLICY
    ========================================================= */
 
 const policyForm =
@@ -3712,9 +2910,9 @@ if (policyForm) {
 
     policyForm.addEventListener(
         "submit",
-        async event => {
+        async e => {
 
-            event.preventDefault();
+            e.preventDefault();
 
 
             if (!isAdmin) {
@@ -3777,6 +2975,7 @@ if (policyForm) {
 
                 policyForm.reset();
 
+
                 closeModal(
                     "policyModal"
                 );
@@ -3811,8 +3010,7 @@ function loadPolicies() {
 
         policyUnsubscribe();
 
-        policyUnsubscribe =
-            null;
+        policyUnsubscribe = null;
 
     }
 
@@ -3839,13 +3037,11 @@ function loadPolicies() {
                     );
 
 
-                if (!list) {
+                if (!list)
                     return;
-                }
 
 
-                list.innerHTML =
-                    "";
+                list.innerHTML = "";
 
 
                 const policyCount =
@@ -3877,8 +3073,8 @@ function loadPolicies() {
                             </strong>
 
                             <span>
-                                Add institutional policies,
-                                rules or guidelines.
+                                Add institutional policies, rules or
+                                guidelines to create a reliable reference library.
                             </span>
 
                             <button
@@ -3928,17 +3124,15 @@ function loadPolicies() {
                                     ${safe(
                                         policy.version
                                     )}
-
                                 </p>
 
                                 <p>
                                     📅
-
                                     Effective:
+
                                     ${safe(
                                         policy.date
                                     )}
-
                                 </p>
 
                                 <p>
@@ -3954,7 +3148,9 @@ function loadPolicies() {
 
                                         <button
                                             class="delete-btn"
-                                            data-id="${safeAttribute(item.id)}"
+                                            data-id="${safeAttribute(
+                                                item.id
+                                            )}"
                                             type="button"
                                         >
                                             Delete
@@ -3980,6 +3176,11 @@ function loadPolicies() {
             },
 
             error => {
+
+                console.error(
+                    "POLICY ERROR:",
+                    error
+                );
 
                 showToast(
                     error.message
@@ -4007,15 +3208,14 @@ function attachDeleteButtons(
         .forEach(
             button => {
 
-                button.onclick =
-                    () => {
+                button.onclick = () => {
 
-                        deleteRecord(
-                            type,
-                            button.dataset.id
-                        );
+                    deleteRecord(
+                        type,
+                        button.dataset.id
+                    );
 
-                    };
+                };
 
             }
         );
@@ -4043,15 +3243,14 @@ async function deleteRecord(
     }
 
 
-    const confirmed =
+    const confirmDelete =
         confirm(
             "Delete this record?"
         );
 
 
-    if (!confirmed) {
+    if (!confirmDelete)
         return;
-    }
 
 
     try {
@@ -4073,6 +3272,11 @@ async function deleteRecord(
 
 
     } catch (error) {
+
+        console.error(
+            "DELETE ERROR:",
+            error
+        );
 
         showToast(
             error.message
@@ -4100,10 +3304,10 @@ if (searchInput) {
 
     searchInput.addEventListener(
         "input",
-        event => {
+        e => {
 
-            const searchText =
-                event.target.value
+            const text =
+                e.target.value
                     .toLowerCase()
                     .trim();
 
@@ -4122,10 +3326,10 @@ if (searchInput) {
 
                         card.style.display =
                             content.includes(
-                                searchText
+                                text
                             )
-                            ? ""
-                            : "none";
+                                ? ""
+                                : "none";
 
                     }
                 );
@@ -4148,9 +3352,8 @@ function showToast(message) {
         );
 
 
-    if (!toast) {
+    if (!toast)
         return;
-    }
 
 
     const content =
@@ -4191,7 +3394,7 @@ function showToast(message) {
                 );
 
             },
-            3000
+            2500
         );
 
 }
@@ -4209,30 +3412,29 @@ const toastClose =
 
 if (toastClose) {
 
-    toastClose.onclick =
-        () => {
+    toastClose.onclick = () => {
 
-            const toast =
-                document.getElementById(
-                    "toast"
-                );
+        const toast =
+            document.getElementById(
+                "toast"
+            );
 
 
-            if (toast) {
+        if (toast) {
 
-                toast.classList.remove(
-                    "show"
-                );
+            toast.classList.remove(
+                "show"
+            );
 
-            }
+        }
 
-        };
+    };
 
 }
 
 
 /* =========================================================
-   STOP FIREBASE LISTENERS
+   STOP REALTIME LISTENERS
    ========================================================= */
 
 function stopListeners() {
@@ -4267,6 +3469,11 @@ function stopListeners() {
     }
 
 
+    /* IMPORTANT:
+       Problems listener also needs
+       to stop on logout.
+    */
+
     if (problemUnsubscribe) {
 
         problemUnsubscribe();
@@ -4280,7 +3487,7 @@ function stopListeners() {
 
 
 /* =========================================================
-   HTML SECURITY
+   SECURITY: ESCAPE HTML
    ========================================================= */
 
 function safe(value) {
@@ -4352,7 +3559,7 @@ function isSafeUrl(value) {
    FIREBASE ERROR MESSAGES
    ========================================================= */
 
-function getErrorMessage(error) {
+function getError(error) {
 
     const errors = {
 
@@ -4375,7 +3582,13 @@ function getErrorMessage(error) {
             "Incorrect email or password.",
 
         "auth/network-request-failed":
-            "Network error. Check your internet connection."
+            "Network error. Check your internet connection.",
+
+        "auth/too-many-requests":
+            "Too many attempts. Please try again later.",
+
+        "auth/user-disabled":
+            "This account has been disabled."
 
     };
 
