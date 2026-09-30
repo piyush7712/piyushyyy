@@ -56,12 +56,6 @@ const ADMIN_UIDS = [
     "N6lVEy0lLbQua6my0Ktokym3AD22"
 ];
 
-
-/*
- * All common institutional data is stored under
- * this UID.
- */
-
 const DATA_OWNER_UID =
     "aQ3rE6XskFWueVUFNiR2Oj4GxAZ2";
 
@@ -72,6 +66,7 @@ let meetingUnsubscribe = null;
 let eventUnsubscribe = null;
 let policyUnsubscribe = null;
 let problemUnsubscribe = null;
+let feedbackUnsubscribe = null;
 
 let selectedProblemId = null;
 let toastTimer = null;
@@ -135,20 +130,32 @@ function dataPath(type) {
 
 
 /* =========================================================
-   PROBLEM ELEMENTS
+   GENERIC MODAL CLOSE
    ========================================================= */
 
-const addProblemBtn =
-    document.getElementById("addProblemBtn");
+document.addEventListener(
+    "click",
+    event => {
 
-const problemForm =
-    document.getElementById("problemForm");
+        const closeButton =
+            event.target.closest("[data-close]");
 
-const problemResponseForm =
-    document.getElementById("problemResponseForm");
+        if (!closeButton) {
+            return;
+        }
 
-const problemSearch =
-    document.getElementById("problemSearch");
+        const modalId =
+            closeButton.dataset.close;
+
+        const modal =
+            document.getElementById(modalId);
+
+        if (modal) {
+            modal.classList.add("hidden");
+        }
+
+    }
+);
 
 
 /* =========================================================
@@ -352,45 +359,24 @@ function createStudentProblemModal() {
     document.body.appendChild(modal);
 }
 
-
 createStudentProblemModal();
 
 
 /* =========================================================
-   GENERIC MODAL CLOSE
+   PROBLEM ELEMENTS
    ========================================================= */
 
-document.addEventListener(
-    "click",
-    event => {
+const addProblemBtn =
+    document.getElementById("addProblemBtn");
 
-        const closeButton =
-            event.target.closest(
-                "[data-close]"
-            );
+const problemForm =
+    document.getElementById("problemForm");
 
-        if (!closeButton) {
-            return;
-        }
+const problemResponseForm =
+    document.getElementById("problemResponseForm");
 
-        const modalId =
-            closeButton.dataset.close;
-
-        const modal =
-            document.getElementById(
-                modalId
-            );
-
-        if (modal) {
-
-            modal.classList.add(
-                "hidden"
-            );
-
-        }
-
-    }
-);
+const problemSearch =
+    document.getElementById("problemSearch");
 
 
 /* =========================================================
@@ -409,11 +395,7 @@ if (addProblemBtn) {
                 );
 
             if (modal) {
-
-                modal.classList.remove(
-                    "hidden"
-                );
-
+                modal.classList.remove("hidden");
             }
 
         }
@@ -434,7 +416,6 @@ if (problemForm) {
 
             event.preventDefault();
 
-
             if (!auth.currentUser) {
 
                 showToast(
@@ -442,45 +423,31 @@ if (problemForm) {
                 );
 
                 return;
-
             }
-
 
             try {
 
                 const title =
                     document
-                        .getElementById(
-                            "problemTitle"
-                        )
+                        .getElementById("problemTitle")
                         .value
                         .trim();
-
 
                 const category =
                     document
-                        .getElementById(
-                            "problemCategory"
-                        )
+                        .getElementById("problemCategory")
                         .value;
-
 
                 const priority =
                     document
-                        .getElementById(
-                            "problemPriority"
-                        )
+                        .getElementById("problemPriority")
                         .value;
-
 
                 const description =
                     document
-                        .getElementById(
-                            "problemDescription"
-                        )
+                        .getElementById("problemDescription")
                         .value
                         .trim();
-
 
                 if (
                     !title ||
@@ -493,7 +460,6 @@ if (problemForm) {
                     );
 
                     return;
-
                 }
 
 
@@ -548,20 +514,9 @@ if (problemForm) {
 
                 problemForm.reset();
 
-
-                const modal =
-                    document.getElementById(
-                        "problemModal"
-                    );
-
-                if (modal) {
-
-                    modal.classList.add(
-                        "hidden"
-                    );
-
-                }
-
+                closeModal(
+                    "problemModal"
+                );
 
                 showToast(
                     "Problem submitted successfully."
@@ -577,7 +532,7 @@ if (problemForm) {
 
                 showToast(
                     "Could not submit problem: " +
-                    error.message
+                    getErrorMessage(error)
                 );
 
             }
@@ -599,22 +554,13 @@ function loadProblems() {
         problemUnsubscribe();
 
         problemUnsubscribe = null;
-
     }
-
 
     if (!auth.currentUser) {
         return;
     }
 
-
     let q;
-
-
-    /*
-     * ADMIN:
-     * Load all problems.
-     */
 
     if (isAdmin) {
 
@@ -623,17 +569,7 @@ function loadProblems() {
                 dataPath("problems")
             );
 
-    }
-
-
-    /*
-     * STUDENT:
-     * IMPORTANT:
-     * Student query must contain where()
-     * because Firestore rules do not filter queries.
-     */
-
-    else {
+    } else {
 
         q =
             query(
@@ -655,9 +591,7 @@ function loadProblems() {
 
             snapshot => {
 
-                renderProblems(
-                    snapshot
-                );
+                renderProblems(snapshot);
 
             },
 
@@ -670,7 +604,7 @@ function loadProblems() {
 
                 showToast(
                     "Problems error: " +
-                    error.message
+                    getErrorMessage(error)
                 );
 
             }
@@ -707,34 +641,25 @@ function renderProblems(snapshot) {
             const problem =
                 item.data();
 
-
             if (
                 problem.status ===
                 "Pending"
             ) {
-
                 pending++;
-
             }
-
 
             if (
                 problem.status ===
                 "Under Review"
             ) {
-
                 review++;
-
             }
-
 
             if (
                 problem.status ===
                 "Resolved"
             ) {
-
                 resolved++;
-
             }
 
         }
@@ -763,31 +688,23 @@ function renderProblems(snapshot) {
 
 
     if (totalCount) {
-
         totalCount.textContent =
             snapshot.size;
-
     }
 
     if (pendingCount) {
-
         pendingCount.textContent =
             pending;
-
     }
 
     if (reviewCount) {
-
         reviewCount.textContent =
             review;
-
     }
 
     if (resolvedCount) {
-
         resolvedCount.textContent =
             resolved;
-
     }
 
 
@@ -815,7 +732,6 @@ function renderProblems(snapshot) {
         `;
 
         return;
-
     }
 
 
@@ -855,7 +771,6 @@ function renderProblems(snapshot) {
                     "div"
                 );
 
-
             card.className =
                 "problem-card";
 
@@ -880,7 +795,7 @@ function renderProblems(snapshot) {
                 !isAdmin &&
                 auth.currentUser &&
                 problem.submittedBy ===
-                    auth.currentUser.uid
+                auth.currentUser.uid
             ) {
 
                 studentActions = `
@@ -951,19 +866,9 @@ function renderProblems(snapshot) {
 
                         <p>
                             ${safe(
-                                problem.studentFeedback
-                            )}
+                    problem.studentFeedback
+                )}
                         </p>
-
-                        ${
-                            problem.feedbackUpdatedAt
-                            ? `
-                                <small>
-                                    Feedback submitted/updated
-                                </small>
-                            `
-                            : ""
-                        }
 
                     </div>
 
@@ -989,8 +894,8 @@ function renderProblems(snapshot) {
 
                         <p>
                             ${safe(
-                                problem.adminResponse
-                            )}
+                    problem.adminResponse
+                )}
                         </p>
 
                     </div>
@@ -1006,24 +911,24 @@ function renderProblems(snapshot) {
 
                     <span class="problem-badge">
                         ${safe(
-                            problem.category ||
-                            "Other"
-                        )}
+                problem.category ||
+                "Other"
+            )}
                     </span>
 
                     <span class="problem-priority ${priorityClass}">
                         ${safe(
-                            problem.priority ||
-                            "Medium"
-                        )}
+                problem.priority ||
+                "Medium"
+            )}
                         Priority
                     </span>
 
                     <span class="problem-status ${statusClass}">
                         ${safe(
-                            problem.status ||
-                            "Pending"
-                        )}
+                problem.status ||
+                "Pending"
+            )}
                     </span>
 
                 </div>
@@ -1031,20 +936,19 @@ function renderProblems(snapshot) {
 
                 <h3>
                     ${safe(
-                        problem.title
-                    )}
+                problem.title
+            )}
                 </h3>
 
 
                 <p class="problem-description">
                     ${safe(
-                        problem.description
-                    )}
+                problem.description
+            )}
                 </p>
 
 
-                ${
-                    isAdmin
+                ${isAdmin
                     ? `
 
                         <div class="problem-user">
@@ -1054,9 +958,9 @@ function renderProblems(snapshot) {
                             </strong>
 
                             ${safe(
-                                problem.submittedByEmail ||
-                                "Student"
-                            )}
+                        problem.submittedByEmail ||
+                        "Student"
+                    )}
 
                         </div>
 
@@ -1067,21 +971,16 @@ function renderProblems(snapshot) {
 
                 ${responseHTML}
 
-
                 ${feedbackHTML}
 
-
                 ${studentActions}
-
 
                 ${adminActions}
 
             `;
 
 
-            list.appendChild(
-                card
-            );
+            list.appendChild(card);
 
         }
     );
@@ -1096,32 +995,23 @@ function renderProblems(snapshot) {
    PROBLEM STATUS CLASS
    ========================================================= */
 
-function getProblemStatusClass(
-    status
-) {
+function getProblemStatusClass(status) {
 
     if (
         status ===
         "Resolved"
     ) {
-
         return "resolved";
-
     }
-
 
     if (
         status ===
         "Under Review"
     ) {
-
         return "review";
-
     }
 
-
     return "pending";
-
 }
 
 
@@ -1194,7 +1084,7 @@ function attachProblemButtons() {
 
 
 /* =========================================================
-   OPEN STUDENT EDIT MODAL
+   OPEN STUDENT PROBLEM EDIT
    ========================================================= */
 
 async function openStudentProblemEdit(
@@ -1208,15 +1098,10 @@ async function openStudentProblemEdit(
         );
 
         return;
-
     }
 
 
     try {
-
-        /*
-         * Student is querying only their own problems.
-         */
 
         const q =
             query(
@@ -1260,21 +1145,6 @@ async function openStudentProblemEdit(
             );
 
             return;
-
-        }
-
-
-        if (
-            problemData.submittedBy !==
-            auth.currentUser.uid
-        ) {
-
-            showToast(
-                "You can only edit your own problem."
-            );
-
-            return;
-
         }
 
 
@@ -1283,7 +1153,7 @@ async function openStudentProblemEdit(
                 "studentEditProblemId"
             )
             .value =
-                problemId;
+            problemId;
 
 
         document
@@ -1291,7 +1161,7 @@ async function openStudentProblemEdit(
                 "studentEditProblemTitle"
             )
             .value =
-                problemData.title || "";
+            problemData.title || "";
 
 
         document
@@ -1299,7 +1169,7 @@ async function openStudentProblemEdit(
                 "studentEditProblemCategory"
             )
             .value =
-                problemData.category || "";
+            problemData.category || "";
 
 
         document
@@ -1307,8 +1177,8 @@ async function openStudentProblemEdit(
                 "studentEditProblemPriority"
             )
             .value =
-                problemData.priority ||
-                "Medium";
+            problemData.priority ||
+            "Medium";
 
 
         document
@@ -1316,7 +1186,7 @@ async function openStudentProblemEdit(
                 "studentEditProblemDescription"
             )
             .value =
-                problemData.description || "";
+            problemData.description || "";
 
 
         document
@@ -1324,7 +1194,7 @@ async function openStudentProblemEdit(
                 "studentProblemFeedback"
             )
             .value =
-                problemData.studentFeedback || "";
+            problemData.studentFeedback || "";
 
 
         const responseBox =
@@ -1350,21 +1220,19 @@ async function openStudentProblemEdit(
 
                     <p>
                         ${safe(
-                            problemData.adminResponse
-                        )}
+                    problemData.adminResponse
+                )}
                     </p>
 
                     <p>
-
                         <strong>
                             Status:
                         </strong>
 
                         ${safe(
-                            problemData.status ||
-                            "Pending"
-                        )}
-
+                    problemData.status ||
+                    "Pending"
+                )}
                     </p>
 
                 `;
@@ -1406,7 +1274,7 @@ async function openStudentProblemEdit(
 
         showToast(
             "Could not open problem: " +
-            error.message
+            getErrorMessage(error)
         );
 
     }
@@ -1415,7 +1283,7 @@ async function openStudentProblemEdit(
 
 
 /* =========================================================
-   STUDENT EDIT + FEEDBACK FORM
+   STUDENT PROBLEM EDIT FORM
    ========================================================= */
 
 const studentProblemEditForm =
@@ -1440,7 +1308,6 @@ if (studentProblemEditForm) {
                 );
 
                 return;
-
             }
 
 
@@ -1459,7 +1326,6 @@ if (studentProblemEditForm) {
                 );
 
                 return;
-
             }
 
 
@@ -1474,12 +1340,6 @@ if (studentProblemEditForm) {
                         problemId
                     );
 
-
-                /*
-                 * Read the current document first.
-                 * This verifies ownership and allows us
-                 * to preserve existing feedback timestamp.
-                 */
 
                 const currentSnapshot =
                     await getDoc(
@@ -1496,7 +1356,6 @@ if (studentProblemEditForm) {
                     );
 
                     return;
-
                 }
 
 
@@ -1514,7 +1373,6 @@ if (studentProblemEditForm) {
                     );
 
                     return;
-
                 }
 
 
@@ -1572,7 +1430,6 @@ if (studentProblemEditForm) {
                     );
 
                     return;
-
                 }
 
 
@@ -1590,17 +1447,13 @@ if (studentProblemEditForm) {
                     problemRef,
                     {
 
-                        title:
-                            title,
+                        title: title,
 
-                        category:
-                            category,
+                        category: category,
 
-                        priority:
-                            priority,
+                        priority: priority,
 
-                        description:
-                            description,
+                        description: description,
 
                         studentFeedback:
                             feedback,
@@ -1610,29 +1463,19 @@ if (studentProblemEditForm) {
 
                         feedbackUpdatedAt:
                             feedbackChanged
-                            ? Date.now()
-                            : (
-                                currentData.feedbackUpdatedAt ||
-                                null
-                            )
+                                ? Date.now()
+                                : (
+                                    currentData.feedbackUpdatedAt ||
+                                    null
+                                )
 
                     }
                 );
 
 
-                const modal =
-                    document.getElementById(
-                        "studentProblemEditModal"
-                    );
-
-
-                if (modal) {
-
-                    modal.classList.add(
-                        "hidden"
-                    );
-
-                }
+                closeModal(
+                    "studentProblemEditModal"
+                );
 
 
                 showToast(
@@ -1649,7 +1492,7 @@ if (studentProblemEditForm) {
 
                 showToast(
                     "Could not update problem: " +
-                    error.message
+                    getErrorMessage(error)
                 );
 
             }
@@ -1675,7 +1518,6 @@ async function openProblemResponse(
         );
 
         return;
-
     }
 
 
@@ -1708,7 +1550,6 @@ async function openProblemResponse(
             );
 
             return;
-
         }
 
 
@@ -1728,52 +1569,41 @@ async function openProblemResponse(
 
                 <h3>
                     ${safe(
-                        problemData.title
-                    )}
+                problemData.title
+            )}
                 </h3>
 
-
                 <p>
-
                     <strong>
                         Category:
                     </strong>
 
                     ${safe(
-                        problemData.category
-                    )}
-
+                problemData.category
+            )}
                 </p>
 
-
                 <p>
-
                     <strong>
                         Priority:
                     </strong>
 
                     ${safe(
-                        problemData.priority
-                    )}
-
+                problemData.priority
+            )}
                 </p>
 
-
                 <p>
-
                     <strong>
                         Student:
                     </strong>
 
                     ${safe(
-                        problemData.submittedByEmail
-                    )}
-
+                problemData.submittedByEmail
+            )}
                 </p>
 
-
                 <p>
-
                     <strong>
                         Problem:
                     </strong>
@@ -1781,11 +1611,9 @@ async function openProblemResponse(
                     <br>
 
                     ${safe(
-                        problemData.description
-                    )}
-
+                problemData.description
+            )}
                 </p>
-
 
                 <div class="problem-response">
 
@@ -1793,25 +1621,20 @@ async function openProblemResponse(
                         Student Feedback
                     </div>
 
-                    ${
-                        problemData.studentFeedback
-                        ? `
-
+                    ${problemData.studentFeedback
+                    ? `
                             <p>
                                 ${safe(
-                                    problemData.studentFeedback
-                                )}
+                        problemData.studentFeedback
+                    )}
                             </p>
-
                         `
-                        : `
-
+                    : `
                             <p>
                                 No feedback submitted yet.
                             </p>
-
                         `
-                    }
+                }
 
                 </div>
 
@@ -1874,7 +1697,7 @@ async function openProblemResponse(
 
         showToast(
             "Could not open problem: " +
-            error.message
+            getErrorMessage(error)
         );
 
     }
@@ -1883,7 +1706,7 @@ async function openProblemResponse(
 
 
 /* =========================================================
-   ADMIN RESPONSE / RESOLVE
+   ADMIN RESPONSE
    ========================================================= */
 
 if (problemResponseForm) {
@@ -1902,7 +1725,6 @@ if (problemResponseForm) {
                 );
 
                 return;
-
             }
 
 
@@ -1913,7 +1735,6 @@ if (problemResponseForm) {
                 );
 
                 return;
-
             }
 
 
@@ -1943,7 +1764,6 @@ if (problemResponseForm) {
                     );
 
                     return;
-
                 }
 
 
@@ -1957,50 +1777,36 @@ if (problemResponseForm) {
                     );
 
 
-                const updateData = {
-
-                    status:
-                        status,
-
-                    adminResponse:
-                        response,
-
-                    respondedBy:
-                        auth.currentUser.uid,
-
-                    respondedAt:
-                        Date.now(),
-
-                    updatedAt:
-                        Date.now(),
-
-                    resolvedAt:
-                        status === "Resolved"
-                        ? Date.now()
-                        : null
-
-                };
-
-
                 await updateDoc(
                     problemRef,
-                    updateData
+                    {
+
+                        status: status,
+
+                        adminResponse:
+                            response,
+
+                        respondedBy:
+                            auth.currentUser.uid,
+
+                        respondedAt:
+                            Date.now(),
+
+                        updatedAt:
+                            Date.now(),
+
+                        resolvedAt:
+                            status === "Resolved"
+                                ? Date.now()
+                                : null
+
+                    }
                 );
 
 
-                const modal =
-                    document.getElementById(
-                        "problemResponseModal"
-                    );
-
-
-                if (modal) {
-
-                    modal.classList.add(
-                        "hidden"
-                    );
-
-                }
+                closeModal(
+                    "problemResponseModal"
+                );
 
 
                 selectedProblemId =
@@ -2009,8 +1815,8 @@ if (problemResponseForm) {
 
                 showToast(
                     status === "Resolved"
-                    ? "Problem resolved successfully."
-                    : "Problem response updated successfully."
+                        ? "Problem resolved successfully."
+                        : "Problem response updated successfully."
                 );
 
 
@@ -2023,7 +1829,7 @@ if (problemResponseForm) {
 
                 showToast(
                     "Could not update problem: " +
-                    error.message
+                    getErrorMessage(error)
                 );
 
             }
@@ -2049,17 +1855,14 @@ async function deleteProblem(
         );
 
         return;
-
     }
 
 
-    const confirmed =
-        confirm(
+    if (
+        !confirm(
             "Are you sure you want to delete this problem?"
-        );
-
-
-    if (!confirmed) {
+        )
+    ) {
         return;
     }
 
@@ -2091,7 +1894,7 @@ async function deleteProblem(
 
         showToast(
             "Could not delete problem: " +
-            error.message
+            getErrorMessage(error)
         );
 
     }
@@ -2131,8 +1934,8 @@ if (problemSearch) {
                             text.includes(
                                 searchText
                             )
-                            ? ""
-                            : "none";
+                                ? ""
+                                : "none";
 
                     }
                 );
@@ -2164,28 +1967,19 @@ if (showSignupButton) {
         () => {
 
             if (loginBox) {
-
                 loginBox.classList.add(
                     "hidden"
                 );
-
             }
 
-
             if (signupBox) {
-
                 signupBox.classList.remove(
                     "hidden"
                 );
-
             }
 
-
             if (loginMessage) {
-
-                loginMessage.textContent =
-                    "";
-
+                loginMessage.textContent = "";
             }
 
         };
@@ -2199,28 +1993,19 @@ if (showLoginButton) {
         () => {
 
             if (signupBox) {
-
                 signupBox.classList.add(
                     "hidden"
                 );
-
             }
 
-
             if (loginBox) {
-
                 loginBox.classList.remove(
                     "hidden"
                 );
-
             }
 
-
             if (signupMessage) {
-
-                signupMessage.textContent =
-                    "";
-
+                signupMessage.textContent = "";
             }
 
         };
@@ -2400,7 +2185,6 @@ onAuthStateChanged(
             updateAdminUI();
 
             return;
-
         }
 
 
@@ -2454,8 +2238,8 @@ onAuthStateChanged(
 
             userRole.textContent =
                 isAdmin
-                ? "ADMIN"
-                : "USER";
+                    ? "ADMIN"
+                    : "USER";
 
         }
 
@@ -2472,6 +2256,7 @@ onAuthStateChanged(
         loadEvents();
         loadPolicies();
         loadProblems();
+        loadFeedback();
 
     }
 );
@@ -2531,9 +2316,7 @@ function updateAdminUI() {
         id => {
 
             const button =
-                document.getElementById(
-                    id
-                );
+                document.getElementById(id);
 
 
             if (!button) {
@@ -2543,8 +2326,8 @@ function updateAdminUI() {
 
             button.style.display =
                 isAdmin
-                ? ""
-                : "none";
+                    ? ""
+                    : "none";
 
         }
     );
@@ -2572,10 +2355,7 @@ navButtons.forEach(
                 const page =
                     button.dataset.page;
 
-
-                showPage(
-                    page
-                );
+                showPage(page);
 
             }
         );
@@ -2662,7 +2442,10 @@ function showPage(page) {
             "Policies & Rules",
 
         problems:
-            "Problems & Feedback"
+            "Problems & Feedback",
+
+        feedback:
+            "Feedback"
 
     };
 
@@ -2675,6 +2458,18 @@ function showPage(page) {
 
     }
 
+
+    /* Load feedback whenever Feedback page opens */
+
+    if (
+        page === "feedback" &&
+        auth.currentUser
+    ) {
+
+        loadFeedback();
+
+    }
+
 }
 
 
@@ -2684,6 +2479,22 @@ function showPage(page) {
 
 function openModal(id) {
 
+    const modal =
+        document.getElementById(id);
+
+    if (!modal) {
+        return;
+    }
+
+    modal.classList.remove(
+        "hidden"
+    );
+
+}
+
+
+function openAdminModal(id) {
+
     if (!isAdmin) {
 
         showToast(
@@ -2691,23 +2502,9 @@ function openModal(id) {
         );
 
         return;
-
     }
 
-
-    const modal =
-        document.getElementById(
-            id
-        );
-
-
-    if (modal) {
-
-        modal.classList.remove(
-            "hidden"
-        );
-
-    }
+    openModal(id);
 
 }
 
@@ -2715,10 +2512,7 @@ function openModal(id) {
 function closeModal(id) {
 
     const modal =
-        document.getElementById(
-            id
-        );
-
+        document.getElementById(id);
 
     if (modal) {
 
@@ -2746,7 +2540,7 @@ if (addMeetingBtn) {
     addMeetingBtn.onclick =
         () => {
 
-            openModal(
+            openAdminModal(
                 "meetingModal"
             );
 
@@ -2754,10 +2548,6 @@ if (addMeetingBtn) {
 
 }
 
-
-/* =========================================================
-   DASHBOARD MEETING BUTTON
-   ========================================================= */
 
 const dashboardMeetingBtn =
     document.getElementById(
@@ -2770,7 +2560,7 @@ if (dashboardMeetingBtn) {
     dashboardMeetingBtn.onclick =
         () => {
 
-            openModal(
+            openAdminModal(
                 "meetingModal"
             );
 
@@ -2794,7 +2584,7 @@ if (addEventBtn) {
     addEventBtn.onclick =
         () => {
 
-            openModal(
+            openAdminModal(
                 "eventModal"
             );
 
@@ -2818,7 +2608,7 @@ if (addPolicyBtn) {
     addPolicyBtn.onclick =
         () => {
 
-            openModal(
+            openAdminModal(
                 "policyModal"
             );
 
@@ -2844,7 +2634,7 @@ function attachEmptyStateButtons() {
         emptyMeetingBtn.onclick =
             () => {
 
-                openModal(
+                openAdminModal(
                     "meetingModal"
                 );
 
@@ -2864,7 +2654,7 @@ function attachEmptyStateButtons() {
         emptyEventBtn.onclick =
             () => {
 
-                openModal(
+                openAdminModal(
                     "eventModal"
                 );
 
@@ -2884,7 +2674,7 @@ function attachEmptyStateButtons() {
         emptyPolicyBtn.onclick =
             () => {
 
-                openModal(
+                openAdminModal(
                     "policyModal"
                 );
 
@@ -2924,7 +2714,6 @@ if (meetingForm) {
                 );
 
                 return;
-
             }
 
 
@@ -3027,12 +2816,10 @@ if (meetingForm) {
 
             } catch (error) {
 
-                console.error(
-                    error
-                );
+                console.error(error);
 
                 showToast(
-                    error.message
+                    getErrorMessage(error)
                 );
 
             }
@@ -3053,9 +2840,12 @@ function loadMeetings() {
 
         meetingUnsubscribe();
 
-        meetingUnsubscribe =
-            null;
+        meetingUnsubscribe = null;
+    }
 
+
+    if (!auth.currentUser) {
+        return;
     }
 
 
@@ -3091,15 +2881,11 @@ function loadMeetings() {
                 }
 
 
-                list.innerHTML =
-                    "";
+                list.innerHTML = "";
 
 
                 if (recent) {
-
-                    recent.innerHTML =
-                        "";
-
+                    recent.innerHTML = "";
                 }
 
 
@@ -3136,13 +2922,18 @@ function loadMeetings() {
                                 institutional history.
                             </span>
 
-                            <button
-                                id="emptyMeetingBtn"
-                                class="secondary-btn empty-action"
-                                type="button"
-                            >
-                                Create meeting
-                            </button>
+                            ${isAdmin
+                            ? `
+                                    <button
+                                        id="emptyMeetingBtn"
+                                        class="secondary-btn empty-action"
+                                        type="button"
+                                    >
+                                        Create meeting
+                                    </button>
+                                `
+                            : ""
+                        }
 
                         </div>
 
@@ -3152,7 +2943,6 @@ function loadMeetings() {
                     attachEmptyStateButtons();
 
                     return;
-
                 }
 
 
@@ -3172,22 +2962,22 @@ function loadMeetings() {
 
                                 <h3>
                                     ${safe(
-                                        meeting.title
-                                    )}
+                            meeting.title
+                        )}
                                 </h3>
 
                                 <p>
                                     📅
                                     ${safe(
-                                        meeting.date
-                                    )}
+                            meeting.date
+                        )}
                                 </p>
 
                                 <p>
                                     📍
                                     ${safe(
-                                        meeting.venue
-                                    )}
+                            meeting.venue
+                        )}
                                 </p>
 
                                 <p>
@@ -3196,8 +2986,8 @@ function loadMeetings() {
                                     </strong>
 
                                     ${safe(
-                                        meeting.status
-                                    )}
+                            meeting.status
+                        )}
                                 </p>
 
                                 <p>
@@ -3207,8 +2997,8 @@ function loadMeetings() {
                                     <br>
 
                                     ${safe(
-                                        meeting.agenda
-                                    )}
+                            meeting.agenda
+                        )}
                                 </p>
 
                                 <p>
@@ -3218,14 +3008,13 @@ function loadMeetings() {
                                     <br>
 
                                     ${safe(
-                                        meeting.minutes ||
-                                        "Not added"
-                                    )}
+                            meeting.minutes ||
+                            "Not added"
+                        )}
                                 </p>
 
-                                ${
-                                    meeting.action
-                                    ? `
+                                ${meeting.action
+                            ? `
 
                                         <p>
                                             <strong>
@@ -3233,34 +3022,33 @@ function loadMeetings() {
                                             </strong>
 
                                             ${safe(
-                                                meeting.action
-                                            )}
+                                meeting.action
+                            )}
                                         </p>
 
                                         <p>
                                             👤
                                             ${safe(
-                                                meeting.actionOwner ||
-                                                "Not assigned"
-                                            )}
+                                meeting.actionOwner ||
+                                "Not assigned"
+                            )}
                                         </p>
 
                                         <p>
                                             📅 Due:
                                             ${safe(
-                                                meeting.actionDue ||
-                                                "Not set"
-                                            )}
+                                meeting.actionDue ||
+                                "Not set"
+                            )}
                                         </p>
 
                                     `
-                                    : ""
-                                }
+                            : ""
+                        }
 
 
-                                ${
-                                    isAdmin
-                                    ? `
+                                ${isAdmin
+                            ? `
 
                                         <button
                                             class="delete-btn"
@@ -3271,8 +3059,8 @@ function loadMeetings() {
                                         </button>
 
                                     `
-                                    : ""
-                                }
+                            : ""
+                        }
 
                             </div>
 
@@ -3290,34 +3078,33 @@ function loadMeetings() {
 
                                     <h3>
                                         ${safe(
-                                            meeting.title
-                                        )}
+                                meeting.title
+                            )}
                                     </h3>
 
                                     <p>
                                         📅
                                         ${safe(
-                                            meeting.date
-                                        )}
+                                meeting.date
+                            )}
                                     </p>
 
                                     <p>
                                         📍
                                         ${safe(
-                                            meeting.venue
-                                        )}
+                                meeting.venue
+                            )}
                                     </p>
 
                                     <p>
                                         ${safe(
-                                            meeting.status
-                                        )}
+                                meeting.status
+                            )}
                                     </p>
 
                                 </div>
 
                             `;
-
 
                             recentIndex++;
 
@@ -3336,12 +3123,10 @@ function loadMeetings() {
 
             error => {
 
-                console.error(
-                    error
-                );
+                console.error(error);
 
                 showToast(
-                    error.message
+                    getErrorMessage(error)
                 );
 
             }
@@ -3376,7 +3161,6 @@ if (eventForm) {
                 );
 
                 return;
-
             }
 
 
@@ -3458,7 +3242,7 @@ if (eventForm) {
             } catch (error) {
 
                 showToast(
-                    error.message
+                    getErrorMessage(error)
                 );
 
             }
@@ -3479,9 +3263,12 @@ function loadEvents() {
 
         eventUnsubscribe();
 
-        eventUnsubscribe =
-            null;
+        eventUnsubscribe = null;
+    }
 
+
+    if (!auth.currentUser) {
+        return;
     }
 
 
@@ -3512,8 +3299,7 @@ function loadEvents() {
                 }
 
 
-                list.innerHTML =
-                    "";
+                list.innerHTML = "";
 
 
                 const eventCount =
@@ -3549,13 +3335,18 @@ function loadEvents() {
                                 activities to preserve their history.
                             </span>
 
-                            <button
-                                id="emptyEventBtn"
-                                class="secondary-btn empty-action"
-                                type="button"
-                            >
-                                Create event
-                            </button>
+                            ${isAdmin
+                            ? `
+                                    <button
+                                        id="emptyEventBtn"
+                                        class="secondary-btn empty-action"
+                                        type="button"
+                                    >
+                                        Create event
+                                    </button>
+                                `
+                            : ""
+                        }
 
                         </div>
 
@@ -3565,7 +3356,6 @@ function loadEvents() {
                     attachEmptyStateButtons();
 
                     return;
-
                 }
 
 
@@ -3582,34 +3372,33 @@ function loadEvents() {
 
                                 <h3>
                                     ${safe(
-                                        eventData.title
-                                    )}
+                            eventData.title
+                        )}
                                 </h3>
 
                                 <p>
                                     📅
                                     ${safe(
-                                        eventData.date
-                                    )}
+                            eventData.date
+                        )}
                                 </p>
 
                                 <p>
                                     📍
                                     ${safe(
-                                        eventData.location
-                                    )}
+                            eventData.location
+                        )}
                                 </p>
 
                                 <p>
                                     ${safe(
-                                        eventData.description
-                                    )}
+                            eventData.description
+                        )}
                                 </p>
 
 
-                                ${
-                                    eventData.speaker
-                                    ? `
+                                ${eventData.speaker
+                            ? `
 
                                         <p>
                                             🎤
@@ -3618,21 +3407,20 @@ function loadEvents() {
                                             </strong>
 
                                             ${safe(
-                                                eventData.speaker
-                                            )}
+                                eventData.speaker
+                            )}
                                         </p>
 
                                     `
-                                    : ""
-                                }
+                            : ""
+                        }
 
 
-                                ${
-                                    eventData.archiveLink &&
-                                    isSafeUrl(
-                                        eventData.archiveLink
-                                    )
-                                    ? `
+                                ${eventData.archiveLink &&
+                                isSafeUrl(
+                                    eventData.archiveLink
+                                )
+                            ? `
 
                                         <p>
 
@@ -3640,8 +3428,8 @@ function loadEvents() {
 
                                             <a
                                                 href="${safeAttribute(
-                                                    eventData.archiveLink
-                                                )}"
+                                eventData.archiveLink
+                            )}"
                                                 target="_blank"
                                                 rel="noopener noreferrer"
                                             >
@@ -3651,13 +3439,12 @@ function loadEvents() {
                                         </p>
 
                                     `
-                                    : ""
-                                }
+                            : ""
+                        }
 
 
-                                ${
-                                    isAdmin
-                                    ? `
+                                ${isAdmin
+                            ? `
 
                                         <button
                                             class="delete-btn"
@@ -3668,8 +3455,8 @@ function loadEvents() {
                                         </button>
 
                                     `
-                                    : ""
-                                }
+                            : ""
+                        }
 
                             </div>
 
@@ -3689,7 +3476,7 @@ function loadEvents() {
             error => {
 
                 showToast(
-                    error.message
+                    getErrorMessage(error)
                 );
 
             }
@@ -3724,7 +3511,6 @@ if (policyForm) {
                 );
 
                 return;
-
             }
 
 
@@ -3790,7 +3576,7 @@ if (policyForm) {
             } catch (error) {
 
                 showToast(
-                    error.message
+                    getErrorMessage(error)
                 );
 
             }
@@ -3811,9 +3597,12 @@ function loadPolicies() {
 
         policyUnsubscribe();
 
-        policyUnsubscribe =
-            null;
+        policyUnsubscribe = null;
+    }
 
+
+    if (!auth.currentUser) {
+        return;
     }
 
 
@@ -3844,8 +3633,7 @@ function loadPolicies() {
                 }
 
 
-                list.innerHTML =
-                    "";
+                list.innerHTML = "";
 
 
                 const policyCount =
@@ -3881,13 +3669,18 @@ function loadPolicies() {
                                 rules or guidelines.
                             </span>
 
-                            <button
-                                id="emptyPolicyBtn"
-                                class="secondary-btn empty-action"
-                                type="button"
-                            >
-                                Create policy
-                            </button>
+                            ${isAdmin
+                            ? `
+                                    <button
+                                        id="emptyPolicyBtn"
+                                        class="secondary-btn empty-action"
+                                        type="button"
+                                    >
+                                        Create policy
+                                    </button>
+                                `
+                            : ""
+                        }
 
                         </div>
 
@@ -3897,7 +3690,6 @@ function loadPolicies() {
                     attachEmptyStateButtons();
 
                     return;
-
                 }
 
 
@@ -3914,8 +3706,8 @@ function loadPolicies() {
 
                                 <h3>
                                     ${safe(
-                                        policy.title
-                                    )}
+                            policy.title
+                        )}
                                 </h3>
 
                                 <p>
@@ -3926,8 +3718,8 @@ function loadPolicies() {
                                     </strong>
 
                                     ${safe(
-                                        policy.version
-                                    )}
+                            policy.version
+                        )}
 
                                 </p>
 
@@ -3936,21 +3728,19 @@ function loadPolicies() {
 
                                     Effective:
                                     ${safe(
-                                        policy.date
-                                    )}
-
+                            policy.date
+                        )}
                                 </p>
 
                                 <p>
                                     ${safe(
-                                        policy.description
-                                    )}
+                            policy.description
+                        )}
                                 </p>
 
 
-                                ${
-                                    isAdmin
-                                    ? `
+                                ${isAdmin
+                            ? `
 
                                         <button
                                             class="delete-btn"
@@ -3961,8 +3751,8 @@ function loadPolicies() {
                                         </button>
 
                                     `
-                                    : ""
-                                }
+                            : ""
+                        }
 
                             </div>
 
@@ -3982,7 +3772,7 @@ function loadPolicies() {
             error => {
 
                 showToast(
-                    error.message
+                    getErrorMessage(error)
                 );
 
             }
@@ -4039,17 +3829,14 @@ async function deleteRecord(
         );
 
         return;
-
     }
 
 
-    const confirmed =
-        confirm(
+    if (
+        !confirm(
             "Delete this record?"
-        );
-
-
-    if (!confirmed) {
+        )
+    ) {
         return;
     }
 
@@ -4075,10 +3862,1004 @@ async function deleteRecord(
     } catch (error) {
 
         showToast(
-            error.message
+            getErrorMessage(error)
         );
 
     }
+
+}
+
+
+/* =========================================================
+   =========================================================
+   FEEDBACK SYSTEM
+   =========================================================
+   ========================================================= */
+
+
+/*
+ * Your HTML already contains:
+ *
+ * feedbackPage
+ * addFeedbackBtn
+ * feedbackModal
+ * feedbackForm
+ * feedbackType
+ * feedbackRecord
+ * feedbackRating
+ * feedbackVisibility
+ * feedbackMessage
+ *
+ * This section connects all of them to Firebase.
+ */
+
+
+const addFeedbackBtn =
+    document.getElementById(
+        "addFeedbackBtn"
+    );
+
+const feedbackModal =
+    document.getElementById(
+        "feedbackModal"
+    );
+
+const feedbackForm =
+    document.getElementById(
+        "feedbackForm"
+    );
+
+const feedbackType =
+    document.getElementById(
+        "feedbackType"
+    );
+
+const feedbackRecord =
+    document.getElementById(
+        "feedbackRecord"
+    );
+
+const feedbackRating =
+    document.getElementById(
+        "feedbackRating"
+    );
+
+const feedbackVisibility =
+    document.getElementById(
+        "feedbackVisibility"
+    );
+
+const feedbackMessage =
+    document.getElementById(
+        "feedbackMessage"
+    );
+
+
+/* =========================================================
+   OPEN FEEDBACK MODAL
+   ========================================================= */
+
+if (addFeedbackBtn) {
+
+    addFeedbackBtn.addEventListener(
+        "click",
+        async () => {
+
+            if (!auth.currentUser) {
+
+                showToast(
+                    "Please login first."
+                );
+
+                return;
+            }
+
+
+            if (feedbackForm) {
+                feedbackForm.reset();
+            }
+
+
+            if (feedbackRecord) {
+
+                feedbackRecord.innerHTML = `
+
+                    <option value="">
+                        Select a record
+                    </option>
+
+                `;
+
+            }
+
+
+            if (feedbackModal) {
+
+                feedbackModal.classList.remove(
+                    "hidden"
+                );
+
+            }
+
+
+            await loadFeedbackRecords();
+
+        }
+    );
+
+}
+
+
+/* =========================================================
+   FEEDBACK TYPE CHANGE
+   ========================================================= */
+
+if (feedbackType) {
+
+    feedbackType.addEventListener(
+        "change",
+        async () => {
+
+            await loadFeedbackRecords();
+
+        }
+    );
+
+}
+
+
+/* =========================================================
+   LOAD MEETINGS / EVENTS / POLICIES
+   INTO FEEDBACK DROPDOWN
+   ========================================================= */
+
+async function loadFeedbackRecords() {
+
+    if (!feedbackRecord) {
+        return;
+    }
+
+
+    const type =
+        feedbackType
+            ? feedbackType.value
+            : "Meeting";
+
+
+    const collectionNameMap = {
+
+        Meeting: "meetings",
+
+        Event: "events",
+
+        Policy: "policies"
+
+    };
+
+
+    const collectionName =
+        collectionNameMap[type];
+
+
+    if (!collectionName) {
+
+        feedbackRecord.innerHTML = `
+
+            <option value="">
+                Select a record
+            </option>
+
+        `;
+
+        return;
+    }
+
+
+    feedbackRecord.innerHTML = `
+
+        <option value="">
+            Loading records...
+        </option>
+
+    `;
+
+
+    try {
+
+        const snapshot =
+            await getDocs(
+                dataPath(collectionName)
+            );
+
+
+        if (snapshot.empty) {
+
+            feedbackRecord.innerHTML = `
+
+                <option value="">
+                    No ${safe(type.toLowerCase())} records available
+                </option>
+
+            `;
+
+            return;
+        }
+
+
+        const records = [];
+
+
+        snapshot.forEach(
+            item => {
+
+                const data =
+                    item.data();
+
+
+                records.push({
+
+                    id: item.id,
+
+                    title:
+                        data.title ||
+                        "Untitled",
+
+                    date:
+                        data.date ||
+                        "",
+
+                    location:
+                        data.location ||
+                        data.venue ||
+                        ""
+
+                });
+
+            }
+        );
+
+
+        records.sort(
+            (a, b) =>
+                String(b.date || "").localeCompare(
+                    String(a.date || "")
+                )
+        );
+
+
+        feedbackRecord.innerHTML = `
+
+            <option value="">
+                Select a ${safe(type.toLowerCase())}
+            </option>
+
+        `;
+
+
+        records.forEach(
+            record => {
+
+                const option =
+                    document.createElement(
+                        "option"
+                    );
+
+
+                option.value =
+                    record.id;
+
+
+                option.dataset.title =
+                    record.title;
+
+
+                option.textContent =
+                    record.date
+                        ? `${record.title} — ${record.date}`
+                        : record.title;
+
+
+                feedbackRecord.appendChild(
+                    option
+                );
+
+            }
+        );
+
+
+    } catch (error) {
+
+        console.error(
+            "LOAD FEEDBACK RECORDS ERROR:",
+            error
+        );
+
+
+        feedbackRecord.innerHTML = `
+
+            <option value="">
+                Could not load records
+            </option>
+
+        `;
+
+
+        showToast(
+            "Could not load feedback records: " +
+            getErrorMessage(error)
+        );
+
+    }
+
+}
+
+
+/* =========================================================
+   SUBMIT FEEDBACK
+   ========================================================= */
+
+if (feedbackForm) {
+
+    feedbackForm.addEventListener(
+        "submit",
+        async event => {
+
+            event.preventDefault();
+
+
+            if (!auth.currentUser) {
+
+                showToast(
+                    "Please login first."
+                );
+
+                return;
+            }
+
+
+            try {
+
+                /*
+                 * Read every field safely.
+                 */
+
+                const type =
+                    feedbackType
+                        ? feedbackType.value.trim()
+                        : "";
+
+
+                const recordId =
+                    feedbackRecord
+                        ? feedbackRecord.value.trim()
+                        : "";
+
+
+                const rating =
+                    feedbackRating
+                        ? Number(
+                            feedbackRating.value
+                        )
+                        : 0;
+
+
+                const visibility =
+                    feedbackVisibility
+                        ? feedbackVisibility.value
+                        : "Identified";
+
+
+                const message =
+                    feedbackMessage
+                        ? feedbackMessage.value.trim()
+                        : "";
+
+
+                /*
+                 * IMPORTANT:
+                 * These validations prevent the
+                 * "missing or insufficient information"
+                 * error caused by incomplete feedback data.
+                 */
+
+                if (!type) {
+
+                    showToast(
+                        "Please select feedback type."
+                    );
+
+                    return;
+                }
+
+
+                if (!recordId) {
+
+                    showToast(
+                        "Please select a meeting, event or policy."
+                    );
+
+                    return;
+                }
+
+
+                if (
+                    !rating ||
+                    rating < 1 ||
+                    rating > 5
+                ) {
+
+                    showToast(
+                        "Please select a rating from 1 to 5."
+                    );
+
+                    return;
+                }
+
+
+                if (!message) {
+
+                    showToast(
+                        "Please enter your feedback."
+                    );
+
+                    return;
+                }
+
+
+                /*
+                 * Get selected record title.
+                 */
+
+                let recordTitle =
+                    "";
+
+
+                if (feedbackRecord) {
+
+                    const selectedOption =
+                        feedbackRecord
+                            .options[
+                                feedbackRecord
+                                    .selectedIndex
+                            ];
+
+
+                    if (selectedOption) {
+
+                        recordTitle =
+                            selectedOption.dataset.title ||
+                            selectedOption.textContent ||
+                            "";
+
+                    }
+
+                }
+
+
+                /*
+                 * Store feedback.
+                 *
+                 * submittedBy is always stored so
+                 * Firestore rules can restrict students
+                 * to their own feedback.
+                 *
+                 * For Anonymous visibility we simply
+                 * hide the email from the UI.
+                 */
+
+                const feedbackData = {
+
+                    type:
+                        type,
+
+                    recordId:
+                        recordId,
+
+                    recordTitle:
+                        recordTitle,
+
+                    rating:
+                        rating,
+
+                    message:
+                        message,
+
+                    visibility:
+                        visibility,
+
+                    submittedBy:
+                        auth.currentUser.uid,
+
+                    submittedByEmail:
+                        visibility === "Anonymous"
+                            ? ""
+                            : (
+                                auth.currentUser.email ||
+                                ""
+                            ),
+
+                    createdAt:
+                        Date.now()
+
+                };
+
+
+                /*
+                 * THIS is the Firebase write.
+                 */
+
+                await addDoc(
+                    dataPath("feedback"),
+                    feedbackData
+                );
+
+
+                /*
+                 * Reset form.
+                 */
+
+                feedbackForm.reset();
+
+
+                /*
+                 * Restore default dropdown.
+                 */
+
+                if (feedbackRecord) {
+
+                    feedbackRecord.innerHTML = `
+
+                        <option value="">
+                            Select a record
+                        </option>
+
+                    `;
+
+                }
+
+
+                closeModal(
+                    "feedbackModal"
+                );
+
+
+                showToast(
+                    "Feedback submitted successfully."
+                );
+
+
+                /*
+                 * Refresh feedback list.
+                 */
+
+                loadFeedback();
+
+
+            } catch (error) {
+
+                console.error(
+                    "FEEDBACK SUBMIT ERROR:",
+                    error
+                );
+
+
+                /*
+                 * Specific Firebase permission message.
+                 */
+
+                if (
+                    error.code ===
+                    "permission-denied"
+                ) {
+
+                    showToast(
+                        "Feedback permission denied. Update your Firestore Rules."
+                    );
+
+                } else {
+
+                    showToast(
+                        "Could not submit feedback: " +
+                        getErrorMessage(error)
+                    );
+
+                }
+
+            }
+
+        }
+    );
+
+}
+
+
+/* =========================================================
+   LOAD FEEDBACK
+   ========================================================= */
+
+function loadFeedback() {
+
+    if (feedbackUnsubscribe) {
+
+        feedbackUnsubscribe();
+
+        feedbackUnsubscribe = null;
+
+    }
+
+
+    if (!auth.currentUser) {
+        return;
+    }
+
+
+    let feedbackQuery;
+
+
+    /*
+     * ADMIN:
+     * Can see all feedback.
+     */
+
+    if (isAdmin) {
+
+        feedbackQuery =
+            query(
+                dataPath("feedback"),
+                orderBy(
+                    "createdAt",
+                    "desc"
+                )
+            );
+
+    }
+
+
+    /*
+     * STUDENT:
+     * Only see their own feedback.
+     */
+
+    else {
+
+        feedbackQuery =
+            query(
+                dataPath("feedback"),
+                where(
+                    "submittedBy",
+                    "==",
+                    auth.currentUser.uid
+                )
+            );
+
+    }
+
+
+    feedbackUnsubscribe =
+        onSnapshot(
+
+            feedbackQuery,
+
+            snapshot => {
+
+                renderFeedback(snapshot);
+
+            },
+
+            error => {
+
+                console.error(
+                    "FEEDBACK LOAD ERROR:",
+                    error
+                );
+
+
+                const list =
+                    document.getElementById(
+                        "feedbackList"
+                    );
+
+
+                if (list) {
+
+                    list.innerHTML = `
+
+                        <div class="empty-state large-empty">
+
+                            <strong>
+                                Could not load feedback
+                            </strong>
+
+                            <span>
+                                ${safe(
+                        getErrorMessage(error)
+                    )}
+                            </span>
+
+                        </div>
+
+                    `;
+
+                }
+
+
+                if (
+                    error.code ===
+                    "permission-denied"
+                ) {
+
+                    showToast(
+                        "Feedback read permission denied. Check Firestore Rules."
+                    );
+
+                }
+
+            }
+
+        );
+
+}
+
+
+/* =========================================================
+   RENDER FEEDBACK
+   ========================================================= */
+
+function renderFeedback(snapshot) {
+
+    const list =
+        document.getElementById(
+            "feedbackList"
+        );
+
+
+    if (!list) {
+        return;
+    }
+
+
+    if (snapshot.empty) {
+
+        list.innerHTML = `
+
+            <div class="empty-state large-empty">
+
+                <div class="empty-icon">
+                    ★
+                </div>
+
+                <strong>
+                    No feedback yet
+                </strong>
+
+                <span>
+                    Share your experience about meetings,
+                    events or institutional policies.
+                </span>
+
+            </div>
+
+        `;
+
+        return;
+    }
+
+
+    const feedbackItems = [];
+
+
+    snapshot.forEach(
+        item => {
+
+            feedbackItems.push({
+
+                id:
+                    item.id,
+
+                ...item.data()
+
+            });
+
+        }
+    );
+
+
+    /*
+     * Student query doesn't use orderBy because
+     * where + orderBy can require an index.
+     * So sort locally.
+     */
+
+    feedbackItems.sort(
+        (a, b) =>
+            Number(
+                b.createdAt || 0
+            ) -
+            Number(
+                a.createdAt || 0
+            )
+    );
+
+
+    list.innerHTML = "";
+
+
+    feedbackItems.forEach(
+        feedback => {
+
+            const rating =
+                Math.max(
+                    0,
+                    Math.min(
+                        5,
+                        Number(
+                            feedback.rating || 0
+                        )
+                    )
+                );
+
+
+            const stars =
+                "★".repeat(rating) +
+                "☆".repeat(5 - rating);
+
+
+            const identity =
+                feedback.visibility ===
+                "Anonymous"
+
+                    ? "Anonymous"
+
+                    : (
+                        feedback.submittedByEmail ||
+                        "Student"
+                    );
+
+
+            const date =
+                formatDate(
+                    feedback.createdAt
+                );
+
+
+            const card =
+                document.createElement(
+                    "div"
+                );
+
+
+            card.className =
+                "record-card feedback-card";
+
+
+            card.innerHTML = `
+
+                <div class="problem-meta">
+
+                    <span class="problem-badge">
+                        ${safe(
+                feedback.type ||
+                "Feedback"
+            )}
+                    </span>
+
+                    <span class="problem-status review">
+                        ${safe(
+                feedback.visibility ||
+                "Identified"
+            )}
+                    </span>
+
+                </div>
+
+
+                <h3>
+                    ${safe(
+                feedback.recordTitle ||
+                "Institutional Record"
+            )}
+                </h3>
+
+
+                <div
+                    style="
+                        font-size:22px;
+                        letter-spacing:2px;
+                        margin:8px 0;
+                    "
+                >
+                    ${stars}
+                </div>
+
+
+                <p>
+                    ${safe(
+                feedback.message ||
+                ""
+            )}
+                </p>
+
+
+                <div
+                    class="problem-user"
+                >
+
+                    <strong>
+                        Submitted by:
+                    </strong>
+
+                    ${safe(identity)}
+
+                </div>
+
+
+                <small>
+                    ${safe(date)}
+                </small>
+
+            `;
+
+
+            list.appendChild(
+                card
+            );
+
+        }
+    );
+
+}
+
+
+/* =========================================================
+   FORMAT DATE
+   ========================================================= */
+
+function formatDate(value) {
+
+    if (!value) {
+        return "Date not available";
+    }
+
+
+    let date;
+
+
+    if (
+        value &&
+        typeof value.toDate ===
+        "function"
+    ) {
+
+        date =
+            value.toDate();
+
+    } else {
+
+        date =
+            new Date(value);
+
+    }
+
+
+    if (
+        Number.isNaN(
+            date.getTime()
+        )
+    ) {
+
+        return "Date not available";
+
+    }
+
+
+    return date.toLocaleDateString(
+        "en-IN",
+        {
+            day: "2-digit",
+            month: "short",
+            year: "numeric"
+        }
+    );
 
 }
 
@@ -4124,8 +4905,8 @@ if (searchInput) {
                             content.includes(
                                 searchText
                             )
-                            ? ""
-                            : "none";
+                                ? ""
+                                : "none";
 
                     }
                 );
@@ -4191,7 +4972,7 @@ function showToast(message) {
                 );
 
             },
-            3000
+            3500
         );
 
 }
@@ -4241,8 +5022,7 @@ function stopListeners() {
 
         meetingUnsubscribe();
 
-        meetingUnsubscribe =
-            null;
+        meetingUnsubscribe = null;
 
     }
 
@@ -4251,8 +5031,7 @@ function stopListeners() {
 
         eventUnsubscribe();
 
-        eventUnsubscribe =
-            null;
+        eventUnsubscribe = null;
 
     }
 
@@ -4261,8 +5040,7 @@ function stopListeners() {
 
         policyUnsubscribe();
 
-        policyUnsubscribe =
-            null;
+        policyUnsubscribe = null;
 
     }
 
@@ -4271,8 +5049,16 @@ function stopListeners() {
 
         problemUnsubscribe();
 
-        problemUnsubscribe =
-            null;
+        problemUnsubscribe = null;
+
+    }
+
+
+    if (feedbackUnsubscribe) {
+
+        feedbackUnsubscribe();
+
+        feedbackUnsubscribe = null;
 
     }
 
@@ -4375,7 +5161,10 @@ function getErrorMessage(error) {
             "Incorrect email or password.",
 
         "auth/network-request-failed":
-            "Network error. Check your internet connection."
+            "Network error. Check your internet connection.",
+
+        "permission-denied":
+            "Permission denied. Check Firestore Rules."
 
     };
 
@@ -4387,6 +5176,37 @@ function getErrorMessage(error) {
     );
 
 }
+
+
+/* =========================================================
+   ESC KEY CLOSE MODAL
+   ========================================================= */
+
+document.addEventListener(
+    "keydown",
+    event => {
+
+        if (event.key !== "Escape") {
+            return;
+        }
+
+
+        document
+            .querySelectorAll(
+                ".modal:not(.hidden)"
+            )
+            .forEach(
+                modal => {
+
+                    modal.classList.add(
+                        "hidden"
+                    );
+
+                }
+            );
+
+    }
+);
 
 
 /* =========================================================
